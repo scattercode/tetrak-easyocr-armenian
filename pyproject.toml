@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tetrak-easyocr-armenian"
+# Versions track model releases: a new weights release is a new library
+# release, and WEIGHTS_URL / WEIGHTS_SHA256 in the package move with it.
+# 0.x until the first trained weights ship.
+version = "0.1.0"
+description = "Armenian language support for EasyOCR — a trained recognition model, installable as a custom network"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Stephen Masters" },
+    { name = "Yvette Mankerian" },
+]
+# easyocr brings torch and pyyaml transitively, but both are imported
+# directly here, so both are declared. Python floor follows easyocr's
+# supported range rather than our other repos' 3.11 — a library for
+# other people's environments meets those environments where they are.
+dependencies = [
+    "easyocr>=1.7",
+    "requests>=2.28",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5", "pyyaml>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/scattercode/tetrak-easyocr-armenian"
+Trainer = "https://github.com/scattercode/tetrak-hy-trainer"
+Tetrak = "https://tetrak.dev/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tetrak_hy"]
+
+[tool.ruff]
+line-length = 100
+
+# Declared explicitly rather than left to ruff's defaults, which differ
+# between ruff versions. Same arrangement as the sibling repos.
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # import sorting
+    "UP",  # pyupgrade
+    "B",   # bugbear
+]
+ignore = [
+    # Line length is enforced by `ruff format`.
+    "E501",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tetrak_hy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,11 @@
+tetrak-easyocr-armenian
+Copyright 2026 Stephen Masters, Yvette Mankerian
+
+This product re-exports the recognition network architecture of EasyOCR
+(https://github.com/JaidedAI/EasyOCR, Apache License 2.0, JaidedAI).
+
+Trained weights distributed with this project's releases are produced by
+tetrak-hy-trainer (https://github.com/scattercode/tetrak-hy-trainer) and
+are trained in part on text from Armenian Wikisource's edition of the
+Armenian Soviet Encyclopedia (https://hy.wikisource.org/, CC BY-SA 3.0);
+per-release attribution and provenance accompany each release.

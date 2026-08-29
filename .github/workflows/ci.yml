@@ -1,0 +1,38 @@
+# Lint and test on every push and pull request — torch-free by design.
+#
+# The package's runtime dependency is easyocr, which drags torch; CI does
+# not install the package at all. The tests are written to run from the
+# source tree (they read the packaged yaml and source as files), and the
+# easyocr-dependent ones guard with importorskip and are exercised
+# locally instead.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install tooling only
+        run: pip install pytest ruff pyyaml
+
+      - name: Lint
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+
+      - name: Test
+        run: pytest
