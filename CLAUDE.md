@@ -86,5 +86,39 @@ CLAUDE.md for the full rule.
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e '.[dev]'
 pytest
-ruff check src tests && ruff format --check src tests
+ruff check src tests tools && ruff format --check src tests tools
+uv lock --check        # the lockfile matches pyproject.toml
 ```
+
+## Dependencies and the lockfile
+
+Ranges live in `pyproject.toml`; the fully resolved tree (easyocr, torch
+and everything beneath them) lives in `uv.lock`, which exists so security
+scanning — Trivy in CI and on a weekly schedule, plus Dependabot — sees
+real versions rather than ranges. Resolving needs no installing, so the
+lock stays torch-free to regenerate. After any dependency change run
+`uv lock` and commit the lock alongside `pyproject.toml`; both the
+pre-commit hook and CI fail on a stale one.
+
+## Releases and changelog
+
+Releases are automated, the same arrangement as Tetrak — do not perform
+them by hand.
+
+- Every push to `main` runs `release.yml`: `tools/next_version.py` computes
+  the next semantic version from the Conventional Commit history (covered
+  by `tests/test_next_version.py`), git-cliff prepends the new section to
+  `CHANGELOG.md`, and the workflow tags and publishes a GitHub Release.
+- Never edit `CHANGELOG.md` by hand — change the commit messages or the
+  `commit_parsers` in `cliff.toml` instead.
+- Never create tags or Releases manually. A weights PR's merge creates the
+  release its weights are attached to; `WEIGHTS_URL` / `WEIGHTS_SHA256`
+  in that PR point at the tag the automation is about to cut (predict it
+  with `python3 tools/next_version.py --explain`). Code-only releases
+  carry no weights and leave `WEIGHTS_URL` untouched.
+- **The package version comes from the git tag**, via `hatch-vcs`. Do not
+  add a `version = "..."` literal back to `pyproject.toml` — nothing
+  updates it, so it silently goes stale. `src/tetrak_hy/_version.py` is
+  generated at build time and gitignored.
+- `fix` → patch, `feat` → minor, `!` → major. Choose types accordingly.
+- Tooling commits use `chore(release):` so the changelog parser skips them.
