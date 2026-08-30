@@ -28,6 +28,24 @@ are materialised into `~/.tetrak_hy/` on first use, and the quirks of
 EasyOCR's custom-model loading path (there are a few) stay our problem
 rather than yours.
 
+Cached weights are verified against the release's SHA-256 every time they
+are loaded, not only when they are downloaded. A file that matches is used
+as it is — so a machine with no outbound access works once the weights are
+in place — and one that does not, because it was corrupted or because you
+have upgraded to a release carrying a new model, is replaced by a fresh
+verified download.
+
+Set `TETRAK_HY_HOME` to put the cache somewhere other than your home
+directory, or choose it per call:
+
+```python
+reader = tetrak_hy.reader(cache_dir="/srv/models/tetrak_hy")
+```
+
+A local `.pth` passed as `weights_path=` is kept in a `local/`
+subdirectory of the cache, so testing your own weights does not disturb
+the released ones.
+
 ## What it is
 
 EasyOCR does not ship Armenian. This package adds it as a

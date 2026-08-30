@@ -56,6 +56,16 @@ package**. That carries obligations:
 - `WEIGHTS_URL` and `WEIGHTS_SHA256` move together — a URL without its
   checksum must never ship, and a failed checksum refuses installation
   rather than warning.
+- A cached `tetrak_hy.pth` is never trusted without a hash match. Its
+  filename does not change between releases, so `reader()` hashes the
+  cached file against `WEIGHTS_SHA256` on every call and re-downloads on a
+  mismatch; where there is no published checksum to check it against, it
+  refuses to load the file at all. Anything that shortcuts this — trusting
+  the file's existence, caching the verdict — reintroduces the bug where an
+  upgrade silently keeps running the previous release's model.
+- Weights passed as `weights_path=` go to `<cache>/local/`, never over the
+  released weights' cache entry: a training run must not become what the
+  next plain `reader()` call loads.
 - Every release carries the trainer's provenance record (data recipe,
   fonts, crop counts, training config, git SHAs) in its release notes.
 - The Armenian Soviet Encyclopedia training data is CC BY-SA 3.0 from
