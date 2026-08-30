@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling>=1.27", "hatch-vcs"]   # 1.27+ understands PEP 639
 build-backend = "hatchling.build"
 
 [project]
@@ -19,10 +19,24 @@ readme = "README.md"
 # the Trivy gate. Still below the sibling repos' 3.11: this library runs in
 # other people's environments and meets the supported ones where they are.
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 authors = [
     { name = "Stephen Masters" },
     { name = "Yvette Mankerian" },
+]
+keywords = ["ocr", "armenian", "easyocr", "text-recognition", "archives"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: Armenian",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Text Processing",
 ]
 # easyocr brings torch and pyyaml transitively, but both are imported
 # directly here, so both are declared.
@@ -38,6 +52,9 @@ dev = ["pytest>=8.0", "ruff>=0.5", "pyyaml>=6.0"]
 Homepage = "https://github.com/scattercode/tetrak-easyocr-armenian"
 Trainer = "https://github.com/scattercode/tetrak-hy-trainer"
 Tetrak = "https://tetrak.dev/"
+Source = "https://github.com/scattercode/tetrak-easyocr-armenian"
+Changelog = "https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/CHANGELOG.md"
+Issues = "https://github.com/scattercode/tetrak-easyocr-armenian/issues"
 
 [tool.hatch.version]
 source = "vcs"

@@ -92,8 +92,11 @@ pipeline for archival material, which consumes this package as its
 
 ## Licence
 
-Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE). The
-architecture re-exported here is EasyOCR's (Apache 2.0).
+Apache License 2.0 — see
+[LICENSE](https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/LICENSE)
+and
+[NOTICE](https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/NOTICE).
+The architecture re-exported here is EasyOCR's (Apache 2.0).
 
 ## Development
 
@@ -109,6 +112,9 @@ enforced by the hook in `.githooks/` (`git config core.hooksPath .githooks`
 after cloning, or `lefthook install`). Releases and `CHANGELOG.md` are
 generated from those commits automatically on every push to `main`.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow — checks,
-the dependency lockfile, and what the automation expects — and
-[SECURITY.md](SECURITY.md) for how to report a vulnerability.
+See
+[CONTRIBUTING.md](https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/CONTRIBUTING.md)
+for the full workflow — checks, the dependency lockfile, and what the
+automation expects — and
+[SECURITY.md](https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/SECURITY.md)
+for how to report a vulnerability.
