@@ -75,8 +75,10 @@ CLAUDE.md for the full rule.
 - **Conventional Commits**, enforced by `.githooks/commit-msg`
   (`git config core.hooksPath .githooks`, or `lefthook install`).
 - **Ruff** with the explicit rule set in `pyproject.toml`.
-- Python floor follows EasyOCR's supported range (3.9+), not the sibling
-  repos' 3.11 — this library runs in other people's environments.
+- Python floor is 3.10 — below the sibling repos' 3.11 because this
+  library runs in other people's environments, but above EasyOCR's own
+  3.9: that version is end-of-life and holding it forced the lock onto
+  pillow and urllib3 releases with fixed HIGH CVEs (see pyproject.toml).
 - CI installs `[dev]` only and must stay torch-free: tests that need
   easyocr guard with `importorskip` and are exercised locally.
 

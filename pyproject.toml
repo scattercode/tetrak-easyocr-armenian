@@ -13,16 +13,19 @@ name = "tetrak-easyocr-armenian"
 dynamic = ["version"]
 description = "Armenian language support for EasyOCR — a trained recognition model, installable as a custom network"
 readme = "README.md"
-requires-python = ">=3.9"
+# 3.10, not easyocr's own 3.9 floor: 3.9 went end-of-life in October 2025,
+# and holding it forced the universal lock onto the last pillow and urllib3
+# releases that supported it -- both carrying fixed HIGH CVEs, which failed
+# the Trivy gate. Still below the sibling repos' 3.11: this library runs in
+# other people's environments and meets the supported ones where they are.
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
     { name = "Stephen Masters" },
     { name = "Yvette Mankerian" },
 ]
 # easyocr brings torch and pyyaml transitively, but both are imported
-# directly here, so both are declared. Python floor follows easyocr's
-# supported range rather than our other repos' 3.11 — a library for
-# other people's environments meets those environments where they are.
+# directly here, so both are declared.
 dependencies = [
     "easyocr>=1.7",
     "requests>=2.28",
