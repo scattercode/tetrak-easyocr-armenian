@@ -44,6 +44,8 @@ from pathlib import Path
 # the only reason to import this package is to use it with EasyOCR.
 from easyocr.model.vgg_model import Model  # noqa: F401
 
+from ._version import __version__  # noqa: F401
+
 NETWORK_NAME = "tetrak_hy"
 
 # Environment variable naming the cache directory, for machines where
