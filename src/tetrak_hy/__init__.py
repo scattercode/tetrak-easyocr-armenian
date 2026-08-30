@@ -44,7 +44,14 @@ from pathlib import Path
 # the only reason to import this package is to use it with EasyOCR.
 from easyocr.model.vgg_model import Model  # noqa: F401
 
-from ._version import __version__  # noqa: F401
+try:
+    # Written by hatch-vcs at build/install time. CI deliberately never
+    # builds or installs this package (see tests/conftest.py) and imports
+    # it straight from the source tree instead, where this file has never
+    # been generated.
+    from ._version import __version__
+except ImportError:
+    __version__ = "0+unknown"
 
 NETWORK_NAME = "tetrak_hy"
 
