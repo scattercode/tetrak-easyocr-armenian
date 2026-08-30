@@ -76,11 +76,9 @@ class TestWithEasyocrInstalled:
         assert tetrak_hy.Model is not None
         assert tetrak_hy.NETWORK_NAME == "tetrak_hy"
 
-    def test_reader_without_weights_fails_helpfully(self, tmp_path, monkeypatch) -> None:
+    def test_reader_without_weights_fails_helpfully(self, tmp_path) -> None:
         pytest.importorskip("easyocr")
         import tetrak_hy
 
-        monkeypatch.setattr(tetrak_hy, "cache_dir", lambda: tmp_path)
-
         with pytest.raises(tetrak_hy.WeightsNotAvailableError, match="releases"):
-            tetrak_hy.reader()
+            tetrak_hy.reader(cache_dir=tmp_path)
