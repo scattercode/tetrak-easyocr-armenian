@@ -1,13 +1,16 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "tetrak-easyocr-armenian"
-# Versions track model releases: a new weights release is a new library
-# release, and WEIGHTS_URL / WEIGHTS_SHA256 in the package move with it.
-# 0.x until the first trained weights ship.
-version = "0.1.0"
+# Derived from the git tag via hatch-vcs, the workspace pattern (see
+# Tetrak): release.yml computes each version from the commit history and
+# tags it, so a literal here would be a second source of truth that nothing
+# updates. A weights release is still a library release — the weights PR's
+# commit type decides the bump, and WEIGHTS_URL / WEIGHTS_SHA256 in the
+# package move with it. 0.x until the first trained weights ship.
+dynamic = ["version"]
 description = "Armenian language support for EasyOCR — a trained recognition model, installable as a custom network"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -32,6 +35,14 @@ dev = ["pytest>=8.0", "ruff>=0.5", "pyyaml>=6.0"]
 Homepage = "https://github.com/scattercode/tetrak-easyocr-armenian"
 Trainer = "https://github.com/scattercode/tetrak-hy-trainer"
 Tetrak = "https://tetrak.dev/"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+# Writes the resolved version into the package at build time, so an installed
+# copy can report it without git present. Generated, therefore gitignored.
+version-file = "src/tetrak_hy/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tetrak_hy"]
