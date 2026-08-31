@@ -13,10 +13,10 @@ name: EasyOCR resolves ``recog_network="tetrak_hy"`` with
 whole loading contract — no architecture file is copied anywhere at
 runtime. The remaining two pieces, the network config
 (``tetrak_hy.yaml``, shipped as package data) and the trained weights
-(``tetrak_hy.pth``, downloaded from this project's GitHub Releases), are
-materialised by :func:`reader` into a cache directory — ``~/.tetrak_hy``
-by default, or wherever ``TETRAK_HY_HOME`` or ``reader(cache_dir=...)``
-points.
+(``tetrak_hy.pth``, downloaded from the project's Hugging Face model
+repository), are materialised by :func:`reader` into a cache directory
+— ``~/.tetrak_hy`` by default, or wherever ``TETRAK_HY_HOME`` or
+``reader(cache_dir=...)`` points.
 
 Cached weights are re-verified against :data:`WEIGHTS_SHA256` on every
 call, so upgrading this package can never leave you running the previous
@@ -65,13 +65,24 @@ CACHE_DIR_ENV_VAR = "TETRAK_HY_HOME"
 # training run's .pth out of the released weights' slot.
 LOCAL_SUBDIR = "local"
 
-RELEASES_URL = "https://github.com/scattercode/tetrak-easyocr-armenian/releases"
+# Weights are published to the Hugging Face model repository, which is
+# canonical for them; the library pins one Hub revision per released model
+# version. The page carries the provenance record and the checksum below.
+MODEL_REPO_URL = "https://huggingface.co/tetrak/easyocr-armenian"
+
+# The model version these weights are, as tagged on the Hub. The URL below
+# resolves the tag's commit rather than the tag itself: a tag can be moved,
+# a commit cannot, so what ships here is exactly what was reviewed.
+WEIGHTS_VERSION = "v1"
 
 # Filled in by the first weights release; None means "not yet released".
 # Each release updates both together — a URL without its checksum must
 # never ship.
-WEIGHTS_URL: str | None = None
-WEIGHTS_SHA256: str | None = None
+WEIGHTS_URL: str | None = (
+    "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
+    "ac7df15cb01629f5d6e0bba4fcf57213117a3c82/tetrak_hy.pth"
+)
+WEIGHTS_SHA256: str | None = "62de0cbe37e772ce62929c8cb35eae1ccf8cef120b0a4da1723306afea328d0f"
 
 
 class WeightsNotAvailableError(RuntimeError):
@@ -195,8 +206,8 @@ def _download_weights(destination: Path) -> None:
             f"If this machine has no outbound access, fetch them elsewhere and save "
             f"them as {destination}; they are verified against SHA-256 "
             f"{WEIGHTS_SHA256} on every load, so a correct copy is never "
-            f"re-downloaded. The checksum is published with the release at "
-            f"{RELEASES_URL}"
+            f"re-downloaded. The weights and their checksum are published at "
+            f"{MODEL_REPO_URL}"
         ) from error
 
     digest = hashlib.sha256(response.content).hexdigest()
@@ -253,7 +264,7 @@ def _materialise_weights(directory: Path, weights_path: Path | str | None) -> Pa
             f"No trained tetrak_hy weights have been released yet, so there is no "
             f"published checksum to verify {destination} against — and this package "
             f"never loads weights it cannot check. Pass weights_path= to use a local "
-            f"model, or watch {RELEASES_URL}"
+            f"model, or watch {MODEL_REPO_URL}"
         )
 
     if destination.exists() and _sha256(destination) == WEIGHTS_SHA256:

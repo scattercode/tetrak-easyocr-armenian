@@ -52,7 +52,14 @@ package**. That carries obligations:
 
 ### Weights discipline
 
-- Weights are **never committed**; they are GitHub Release assets.
+- Weights are **never committed**. They are published to the Hugging
+  Face model repository `tetrak/easyocr-armenian`, which is canonical
+  for them (Tetrak ADR 001, amended); GitHub Releases mirror them.
+- `WEIGHTS_URL` pins **one immutable Hub commit** per released model
+  version, never a branch or a tag: a tag can be moved, and the
+  checksum would then turn someone else's push into this package's
+  outage. `tools/next_version.py` has nothing to say about it — the
+  revision comes from the trainer's upload.
 - `WEIGHTS_URL` and `WEIGHTS_SHA256` move together — a URL without its
   checksum must never ship, and a failed checksum refuses installation
   rather than warning.
@@ -123,11 +130,11 @@ them by hand.
   `CHANGELOG.md`, and the workflow tags and publishes a GitHub Release.
 - Never edit `CHANGELOG.md` by hand — change the commit messages or the
   `commit_parsers` in `cliff.toml` instead.
-- Never create tags or Releases manually. A weights PR's merge creates the
-  release its weights are attached to; `WEIGHTS_URL` / `WEIGHTS_SHA256`
-  in that PR point at the tag the automation is about to cut (predict it
-  with `python3 tools/next_version.py --explain`). Code-only releases
-  carry no weights and leave `WEIGHTS_URL` untouched.
+- Never create tags or Releases manually. A weights PR carries
+  `WEIGHTS_URL` / `WEIGHTS_SHA256` pointing at the Hub revision the
+  trainer published, so the library release and the weights it fetches
+  are decided before the automation runs. Code-only releases carry no
+  weights and leave `WEIGHTS_URL` untouched.
 - **The package version comes from the git tag**, via `hatch-vcs`. Do not
   add a `version = "..."` literal back to `pyproject.toml` — nothing
   updates it, so it silently goes stale. `src/tetrak_hy/_version.py` is

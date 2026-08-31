@@ -31,6 +31,19 @@ def released(tetrak, monkeypatch):
     return tetrak
 
 
+@pytest.fixture
+def unpublished(tetrak, monkeypatch):
+    """The package with no weights published: URL and checksum both unset.
+
+    Set here rather than read from the module, which now ships real ones.
+    The state is still reachable — a code-only release before the next
+    model version — and the refusal it produces is the point.
+    """
+    monkeypatch.setattr(tetrak, "WEIGHTS_URL", None)
+    monkeypatch.setattr(tetrak, "WEIGHTS_SHA256", None)
+    return tetrak
+
+
 class Response:
     """The slice of ``requests.Response`` that _download_weights uses."""
 
@@ -106,23 +119,22 @@ class TestDownloadFailures:
         assert not cached_pth(tmp_path).exists()
 
 
-class TestBeforeTheFirstRelease:
-    def test_no_release_and_no_cache_names_the_cache_path(self, tetrak, tmp_path) -> None:
-        assert tetrak.WEIGHTS_URL is None  # the pre-release state of the package
-
-        with pytest.raises(tetrak.WeightsNotAvailableError, match="releases") as raised:
-            tetrak._materialise_weights(tmp_path, None)
+class TestWithoutAPublishedChecksum:
+    def test_no_release_and_no_cache_names_the_cache_path(self, unpublished, tmp_path) -> None:
+        with pytest.raises(unpublished.WeightsNotAvailableError) as raised:
+            unpublished._materialise_weights(tmp_path, None)
 
         assert str(cached_pth(tmp_path)) in str(raised.value)
+        assert unpublished.MODEL_REPO_URL in str(raised.value)
 
     def test_a_cached_file_is_not_trusted_without_a_published_checksum(
-        self, tetrak, fake_requests, tmp_path
+        self, unpublished, fake_requests, tmp_path
     ) -> None:
         """Nothing to verify against is a refusal, not a licence to load it."""
         cached_pth(tmp_path).write_bytes(RELEASED)
 
-        with pytest.raises(tetrak.WeightsNotAvailableError):
-            tetrak._materialise_weights(tmp_path, None)
+        with pytest.raises(unpublished.WeightsNotAvailableError):
+            unpublished._materialise_weights(tmp_path, None)
 
 
 class TestLocalWeights:

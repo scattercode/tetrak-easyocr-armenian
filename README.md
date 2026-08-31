@@ -3,11 +3,14 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: pre-release.** The packaging and loading path are complete and
-> tested; the first trained weights have not shipped yet. Until they do,
-> `reader()` raises a clear error unless you pass your own
-> `weights_path=`. Watch the
-> [releases](https://github.com/scattercode/tetrak-easyocr-armenian/releases).
+> **Status: alpha, shipping v1 weights.** `reader()` downloads a trained
+> model and works out of the box. Be clear-eyed about what it is: v1 beats
+> stock EasyOCR by roughly 16x on word recall, but it does **not** yet beat
+> `tesseract -l hye`. If you want the best available Armenian OCR today and
+> are not tied to EasyOCR, use Tesseract. Use this if you are building on
+> EasyOCR, or want an Armenian base to fine-tune. The numbers, measured on
+> real scans, are on the
+> [model card](https://huggingface.co/tetrak/easyocr-armenian).
 
 ## Usage
 
@@ -27,6 +30,12 @@ results = reader.readtext("scan.png")
 are materialised into `~/.tetrak_hy/` on first use, and the quirks of
 EasyOCR's custom-model loading path (there are a few) stay our problem
 rather than yours.
+
+The weights live in the
+[Hugging Face model repository](https://huggingface.co/tetrak/easyocr-armenian),
+which is canonical for them, and each library version pins one immutable
+Hub revision — so the model you get is decided by the version of this
+package you installed, never by what happens to be current upstream.
 
 Cached weights are verified against the release's SHA-256 every time they
 are loaded, not only when they are downloaded. A file that matches is used
@@ -79,12 +88,20 @@ this entirely.)
 ## Provenance
 
 The model is trained by
-[tetrak-hy-trainer](https://github.com/scattercode/tetrak-hy-trainer) —
-synthetic Armenian text rendered in period fonts, fine-tuned on
-human-proofread scans of the Armenian Soviet Encyclopedia from
-[Armenian Wikisource](https://hy.wikisource.org/) (CC BY-SA 3.0). Every
-weights release carries its provenance record: data recipe, fonts, crop
-counts, training config and checksums.
+[tetrak-hy-trainer](https://github.com/scattercode/tetrak-hy-trainer) on
+synthetic line crops: text from human-proofread pages of the Armenian
+Soviet Encyclopedia on
+[Armenian Wikisource](https://hy.wikisource.org/) (CC BY-SA 3.0),
+rendered in Armenian faces at real scan sizes and degraded to look
+scanned. v1 is trained on that synthetic data alone — fine-tuning on
+crops cut from actual scans is the next step, and the one expected to
+close the remaining gap to Tesseract.
+
+Every weights release carries a provenance record — data recipe, fonts,
+dataset revision, training config and checksums — published as
+`provenance.json` beside the weights. The training data is published
+too, as
+[tetrak/armenian-ocr-crops](https://huggingface.co/datasets/tetrak/armenian-ocr-crops).
 
 Built for [Tetrak](https://tetrak.dev/), a local-first transcription
 pipeline for archival material, which consumes this package as its
