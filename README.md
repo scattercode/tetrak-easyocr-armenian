@@ -55,6 +55,25 @@ A local `.pth` passed as `weights_path=` is kept in a `local/`
 subdirectory of the cache, so testing your own weights does not disturb
 the released ones.
 
+## Folding cross-script homoglyphs
+
+The recognition network has no language model, so inside an Armenian word
+it sometimes emits the visually identical Latin or typographic twin of an
+Armenian character instead — Latin `h` for `հ`, a colon for the Armenian
+full stop `։`, an en or em dash for a hyphen. `fold_script()` corrects
+these on already-recognised text, and is worth applying to every result:
+
+```python
+results = [
+    (bbox, tetrak_hy.fold_script(text), confidence)
+    for bbox, text, confidence in reader.readtext("scan.png")
+]
+```
+
+It only touches a token that already contains an Armenian letter, so
+Latin or Cyrillic text sharing a page is left alone. See the function's
+docstring for the exact scope and what it deliberately does not fold.
+
 ## What it is
 
 EasyOCR does not ship Armenian. This package adds it as a

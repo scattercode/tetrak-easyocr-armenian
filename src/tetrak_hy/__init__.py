@@ -6,6 +6,14 @@ Two lines to use it::
     reader = tetrak_hy.reader()          # an easyocr.Reader, Armenian-ready
     reader.readtext("scan.png")
 
+:func:`fold_script` folds a recognised string's cross-script homoglyphs
+(Latin ``h`` for ``հ``, a colon for ``։``, en/em dash for a hyphen) onto
+their Armenian form -- worth applying to every recognised string, since it
+recovers word recall the CTC head's lack of a language model otherwise
+costs. See its own docstring for what it does and does not fold, and why::
+
+    text = tetrak_hy.fold_script(text)
+
 This package's import name, ``tetrak_hy``, is also the EasyOCR network
 name: EasyOCR resolves ``recog_network="tetrak_hy"`` with
 ``importlib.import_module``, which finds this installed package, whose
@@ -43,6 +51,8 @@ from pathlib import Path
 # import requires easyocr (and its torch) — which is always present, since
 # the only reason to import this package is to use it with EasyOCR.
 from easyocr.model.vgg_model import Model  # noqa: F401
+
+from .fold import fold_script  # noqa: F401
 
 try:
     # Written by hatch-vcs at build/install time. CI deliberately never
