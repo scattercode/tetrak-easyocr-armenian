@@ -10,9 +10,10 @@
 # commits since the last tag, the job is a no-op.
 #
 # A weights release is a library release: when a weights PR merges, the
-# release this workflow creates is the one the weights are attached to, and
-# WEIGHTS_URL / WEIGHTS_SHA256 in the package point at it. Code-only
-# releases carry no weights and leave WEIGHTS_URL untouched.
+# release this workflow creates is the one the weights are mirrored onto,
+# and WEIGHTS_URL / WEIGHTS_SHA256 in the package point at the Hugging Face
+# revision they came from. Code-only releases carry no weights and leave
+# WEIGHTS_URL untouched.
 name: Release
 
 on:
@@ -97,6 +98,46 @@ jobs:
           git push origin "$VERSION"
 
           gh release create "$VERSION" --title "$VERSION" --notes-file RELEASE_NOTES.md
+
+  # Mirror the weights onto the GitHub Release. Hugging Face is canonical
+  # for them (Tetrak decision 003); this copy is for users whose network
+  # cannot reach the Hub. It runs after the release exists and in parallel
+  # with the build, and is deliberately not a dependency of publish: a
+  # mirror that fails must not hold back the wheel, because the canonical
+  # download path does not involve it.
+  mirror:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.version }}
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # Reads the pinned URL and checksum straight from the package source
+      # without importing it, so this job stays torch-free like the rest of
+      # CI, and refuses anything whose digest does not match.
+      - name: Fetch and verify the released weights
+        run: python3 tools/mirror_weights.py --output-dir mirror
+
+      - name: Attach them to the release
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ ! -f mirror/tetrak_hy.pth ]; then
+            echo "Code-only release — no weights to mirror."
+            exit 0
+          fi
+          gh release upload "$VERSION" \
+            mirror/tetrak_hy.pth \
+            mirror/tetrak_hy.pth.sha256 \
+            --clobber
 
   # Build the sdist and wheel from the exact tag the release job just
   # pushed. A fresh checkout at the tag is what makes hatch-vcs produce a

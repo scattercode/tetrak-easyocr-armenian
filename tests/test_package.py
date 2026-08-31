@@ -9,6 +9,7 @@ and the weights-release discipline.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -112,3 +113,43 @@ class TestWithEasyocrInstalled:
 
         with pytest.raises(tetrak_hy.WeightsNotAvailableError, match="cannot check"):
             tetrak_hy.reader(cache_dir=tmp_path)
+
+
+class TestWeightsMirror:
+    """`tools/mirror_weights.py` reads the constants without importing."""
+
+    def test_it_finds_the_pinned_constants(self) -> None:
+        """The parse must track the source. A refactor that moved these out
+        of module-level assignments would otherwise produce releases with a
+        silently empty mirror."""
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        try:
+            import mirror_weights
+        finally:
+            sys.path.pop(0)
+
+        source = (PACKAGE_DIR / "__init__.py").read_text(encoding="utf-8")
+        url = mirror_weights.read_constant("WEIGHTS_URL")
+        sha = mirror_weights.read_constant("WEIGHTS_SHA256")
+
+        if "WEIGHTS_URL: str | None = None" in source:
+            assert url is None and sha is None
+        else:
+            # Not `url in source`: the URL is written as two adjacent string
+            # literals, so the joined value never appears verbatim. Joining
+            # them is exactly what this tool has to get right.
+            assert url is not None
+            assert url.startswith("https://") and url.endswith(".pth")
+            assert sha is not None and sha in source
+
+    def test_a_missing_constant_is_loud(self, tmp_path) -> None:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        try:
+            import mirror_weights
+        finally:
+            sys.path.pop(0)
+
+        empty = tmp_path / "nothing.py"
+        empty.write_text("X = 1\n", encoding="utf-8")
+        with pytest.raises(LookupError):
+            mirror_weights.read_constant("WEIGHTS_URL", empty)
