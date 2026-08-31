@@ -23,11 +23,15 @@ class TestHomoglyphs:
     def test_folds_colon_to_armenian_full_stop(self) -> None:
         assert fold_script("Երևան:") == "Երևան։"
 
-    def test_folds_en_dash_to_hyphen(self) -> None:
-        assert fold_script("1886–ին") == "1886-ին"
+    def test_does_not_fold_en_dash(self) -> None:
+        """Deliberate: the transcripts use en dash as a genuine
+        orthographic convention (case-suffix attachment, e.g. "Ա–ի") far
+        more often than the model confuses it for a hyphen. See the
+        module docstring for the measured regression this would cause."""
+        assert fold_script("Ա–ի") == "Ա–ի"
 
-    def test_folds_em_dash_to_hyphen(self) -> None:
-        assert fold_script("1886—ին") == "1886-ին"
+    def test_does_not_fold_em_dash(self) -> None:
+        assert fold_script("1886—ին") == "1886—ին"
 
     def test_folds_every_homoglyph_once_a_token_has_one_armenian_letter(self) -> None:
         # a single Armenian letter anywhere in the token is enough to fold

@@ -4,14 +4,27 @@ v1's per-word error analysis (tetrak's
 ``product/research/armenian-v1-error-analysis.md``) found that roughly
 half of v1's word-recall gap against ``tesseract -l hye`` is not a
 recognition failure. The CTC head has no language model, so inside an
-Armenian word it sometimes emits the visually identical Latin or
-typographic twin of an Armenian character instead of the Armenian one --
-Latin ``h`` for ``հ``, Latin ``o`` for ``օ``, a colon for the Armenian full
-stop ``։``, an en or em dash for a hyphen. All of these are already in the
-model's charset (see the packaged ``tetrak_hy.yaml``), so this is a
-serialisation problem, not a training one: folding the wrong glyph back to
-the right one, on the *predicted* side only, measured +0.10 word recall on
-the same evaluation pages with no retraining.
+Armenian word it sometimes emits the visually identical Latin twin of an
+Armenian character instead of the Armenian one -- Latin ``h`` for ``հ``,
+Latin ``o`` for ``օ``, a colon for the Armenian full stop ``։``. All of
+these are already in the model's charset (see the packaged
+``tetrak_hy.yaml``), so this is a serialisation problem, not a training
+one: folding the wrong glyph back to the right one, on the *predicted*
+side only, measured net +449 words recovered (zero regressed) on the
+same evaluation pages, with no retraining.
+
+Dashes are deliberately **not** folded, despite being a homoglyph
+confusion in the analysis's confusion table (23 occurrences of truth
+``-`` read back as ``–``). tetrak-hy-trainer's harvested ASE transcripts
+also use en dash as a genuine orthographic convention -- attaching a
+grammatical case suffix to an abbreviated headword, e.g. ``Ա–ի`` -- 184
+truth words do this. Re-scoring v1's saved predictions with a dash fold
+in place showed why an unconditional character swap cannot tell these
+apart: it broke 74 correctly-predicted ``–`` words for every 66 ``-``
+words it recovered, a net *loss*. A future, better-targeted fix (e.g.
+scoped to digit-adjacent tokens, where finding 3's year compounds like
+``1886-ին`` live) is possible but wasn't shown to help either at that
+same measurement -- left as a known gap rather than guessed at here.
 
 Scope is deliberately narrow: **each whitespace-separated token**, folded
 only when that token already contains at least one Armenian letter. A
@@ -40,17 +53,17 @@ _ARMENIAN_LETTERS = (
     | {"և"}
 )
 
-# Predicted character -> the Armenian or canonical form it is confused
-# with, per the error analysis's confusion table. Every value is deliberately
-# absent from these keys, so applying the fold twice is a no-op.
+# Predicted character -> the Armenian form it is confused with, per the
+# error analysis's confusion table. Every value is deliberately absent
+# from these keys, so applying the fold twice is a no-op. No dash entry:
+# see the module docstring for why an unconditional swap does more harm
+# than good on this corpus.
 _HOMOGLYPHS = {
     "h": "հ",
     "H": "Հ",
     "o": "օ",
     "O": "Օ",
     ":": "։",
-    "–": "-",  # en dash
-    "—": "-",  # em dash
 }
 
 _TOKEN = re.compile(r"\S+")

@@ -58,10 +58,10 @@ the released ones.
 ## Folding cross-script homoglyphs
 
 The recognition network has no language model, so inside an Armenian word
-it sometimes emits the visually identical Latin or typographic twin of an
-Armenian character instead — Latin `h` for `հ`, a colon for the Armenian
-full stop `։`, an en or em dash for a hyphen. `fold_script()` corrects
-these on already-recognised text, and is worth applying to every result:
+it sometimes emits the visually identical Latin twin of an Armenian
+character instead — Latin `h` for `հ`, a colon for the Armenian full stop
+`։`. `fold_script()` corrects these on already-recognised text, and is
+worth applying to every result:
 
 ```python
 results = [
