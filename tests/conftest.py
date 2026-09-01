@@ -41,6 +41,29 @@ def _easyocr_stand_in() -> dict[str, types.ModuleType]:
     }
 
 
+def _install_stand_in_if_needed() -> None:
+    """Register the easyocr stand-in at collection time when it is absent.
+
+    The fixture below is enough for a test that imports the package inside
+    its own body, but not for one that imports at module level: collection
+    happens before any fixture runs, so `from tetrak_hy.fold import ...`
+    reaches `tetrak_hy/__init__`, which imports easyocr for the `Model`
+    re-export, and CI has no easyocr by design. That is how test_fold.py
+    passed locally and failed there.
+
+    Installed only when the real easyocr is missing, so a local run still
+    exercises the genuine re-export rather than a fake.
+    """
+    try:
+        import easyocr  # noqa: F401
+    except ImportError:
+        for name, module in _easyocr_stand_in().items():
+            sys.modules.setdefault(name, module)
+
+
+_install_stand_in_if_needed()
+
+
 @pytest.fixture
 def tetrak(monkeypatch):
     """The imported package, with easyocr stood in for if it is not installed."""
