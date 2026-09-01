@@ -124,6 +124,11 @@ pre-commit hook and CI fail on a stale one.
 Releases are automated, the same arrangement as Tetrak — do not perform
 them by hand.
 
+For a **weights** release specifically — resolving the Hub tag to an immutable
+commit, moving `WEIGHTS_URL`/`WEIGHTS_SHA256`/the yaml together, choosing the
+commit type that cuts the right version, and the mirror job — load the
+`tetrak-hy-weights-release` skill rather than reconstructing the handshake.
+
 - Every push to `main` runs `release.yml`: `tools/next_version.py` computes
   the next semantic version from the Conventional Commit history (covered
   by `tests/test_next_version.py`), git-cliff prepends the new section to

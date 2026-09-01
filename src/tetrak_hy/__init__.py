@@ -7,10 +7,11 @@ Two lines to use it::
     reader.readtext("scan.png")
 
 :func:`fold_script` folds a recognised string's cross-script homoglyphs
-(Latin ``h`` for ``հ``, a colon for ``։``, en/em dash for a hyphen) onto
-their Armenian form -- worth applying to every recognised string, since it
-recovers word recall the CTC head's lack of a language model otherwise
-costs. See its own docstring for what it does and does not fold, and why::
+(Latin ``h`` for ``հ``, Latin ``o`` for ``օ``, a colon for the Armenian full
+stop ``։``) onto their Armenian form -- worth applying to every recognised
+string, since it recovers word recall the CTC head's lack of a language model
+otherwise costs. Dashes are deliberately *not* folded; see its own docstring
+for what it does and does not fold, and why::
 
     text = tetrak_hy.fold_script(text)
 
