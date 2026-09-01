@@ -3,14 +3,16 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: alpha, shipping v2 weights.** `reader()` downloads a trained
-> model and works out of the box. Measured on real scans, **v2 paired with
-> `fold_script()` reads 0.692 word recall against `tesseract -l hye`'s
-> 0.662** — the first of these releases to pass it. The model on its own
-> reads 0.607, so apply the fold (one line, below); character similarity
-> is a separate and much weaker story, because on two-column pages that
-> metric measures reading order more than recognition. The numbers are on
-> the [model card](https://huggingface.co/tetrak/easyocr-armenian).
+> **Status: alpha, shipping v3 weights.** `reader()` downloads a trained
+> model and works out of the box. v3 is v2 fine-tuned on real crops cut
+> from scanned pages, and with `fold_script()` it reads **0.771 word
+> recall on real scans — the highest measured here, ahead of
+> `tesseract -l hye` at 0.662 and of Marker at 0.766.** The model on its
+> own reads 0.736, so apply the fold (one line, below). Character
+> similarity is a separate and much weaker story, because on two-column
+> pages that metric measures reading order more than recognition. The
+> numbers are on the
+> [model card](https://huggingface.co/tetrak/easyocr-armenian).
 >
 > **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
 > labels carrying quotation marks the images do not show, and with no
@@ -117,10 +119,12 @@ synthetic line crops: text from human-proofread pages of the Armenian
 Soviet Encyclopedia on
 [Armenian Wikisource](https://hy.wikisource.org/) (CC BY-SA 3.0),
 rendered in Armenian faces at real scan sizes and degraded to look
-scanned. v2 is trained on that synthetic data alone — fine-tuning on
-crops cut from actual scans is the next step, targeting the shape
-confusions that remain on degraded letterpress, which a cleanly
-rendered font cannot teach.
+scanned. v2 was trained on that synthetic data alone; **v3 adds a
+fine-tune on 6,097 real crops** cut from 30 human-proofread scans and
+labelled from their transcripts, mixed with the synthetic set so the
+model adapts to real print without forgetting the breadth it started
+with. That is what closed the gap: it targets the shape confusions on
+degraded letterpress that a cleanly rendered font cannot teach.
 
 Every weights release carries a provenance record — data recipe, fonts,
 dataset revision, training config and checksums — published as

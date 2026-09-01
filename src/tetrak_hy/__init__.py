@@ -83,18 +83,19 @@ MODEL_REPO_URL = "https://huggingface.co/tetrak/easyocr-armenian"
 # The model version these weights are, as tagged on the Hub. The URL below
 # resolves the tag's commit rather than the tag itself: a tag can be moved,
 # a commit cannot, so what ships here is exactly what was reviewed.
-WEIGHTS_VERSION = "v2"
+WEIGHTS_VERSION = "v3"
 
 # Filled in by the first weights release; None means "not yet released".
 # Each release updates both together — a URL without its checksum must
-# never ship. The packaged tetrak_hy.yaml comes from the same bundle: v2
-# widened the charset, so its 170-class head cannot be read under v1's
-# 168-class yaml, and the two must move as a pair.
+# never ship. The packaged tetrak_hy.yaml comes from the same bundle and
+# moves as a pair with the weights: v2 widened the charset, so a
+# 170-class head cannot be read under v1's 168-class yaml. v3 is a
+# fine-tune of v2 and inherits that charset unchanged.
 WEIGHTS_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "a9b8f56a0cc5e51ec7420ad286fad942d68114f3/tetrak_hy.pth"
+    "54f37fcdeb8b223fcfe075c552563c1a8dcb786a/tetrak_hy.pth"
 )
-WEIGHTS_SHA256: str | None = "a11f32fc8d974b6c25099df4ef22e552f70524e8278165ce9dde275442eb309b"
+WEIGHTS_SHA256: str | None = "e1dc5451a53741f5bda4dfaf5a427034d4f7a3b83798cce3f1b1038f78d173d5"
 
 
 class WeightsNotAvailableError(RuntimeError):
