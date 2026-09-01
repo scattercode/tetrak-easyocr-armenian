@@ -64,7 +64,7 @@ it.
    | Correcting a wrong checksum or URL | `fix:` | patch |
    | Docs, provenance wording, tooling | `docs:` / `chore:` | none |
 
-   `tools/next_version.py` reads the commit range; only `feat`, `fix`, `perf`
+   The shared next-version action reads the commit range; only `feat`, `fix`, `perf`
    and `revert` cut a release at all.
 
 6. **Merge to `main` and let the automation run.** `release.yml` computes the

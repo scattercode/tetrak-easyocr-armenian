@@ -58,7 +58,7 @@ package**. That carries obligations:
 - `WEIGHTS_URL` pins **one immutable Hub commit** per released model
   version, never a branch or a tag: a tag can be moved, and the
   checksum would then turn someone else's push into this package's
-  outage. `tools/next_version.py` has nothing to say about it — the
+  outage. The version computation has nothing to say about it — the
   revision comes from the trainer's upload.
 - `WEIGHTS_URL` and `WEIGHTS_SHA256` move together — a URL without its
   checksum must never ship, and a failed checksum refuses installation
@@ -129,10 +129,14 @@ commit, moving `WEIGHTS_URL`/`WEIGHTS_SHA256`/the yaml together, choosing the
 commit type that cuts the right version, and the mirror job — load the
 `tetrak-hy-weights-release` skill rather than reconstructing the handshake.
 
-- Every push to `main` runs `release.yml`: `tools/next_version.py` computes
-  the next semantic version from the Conventional Commit history (covered
-  by `tests/test_next_version.py`), git-cliff prepends the new section to
-  `CHANGELOG.md`, and the workflow tags and publishes a GitHub Release.
+- Every push to `main` runs `release.yml`: the shared `next-version` action
+  (`scattercode/release-pipelines`, pinned to `@v1`) computes the next
+  semantic version from the Conventional Commit history, git-cliff prepends
+  the new section to `CHANGELOG.md`, and the workflow tags and publishes a
+  GitHub Release. The computation and its tests live in that repository
+  because they were byte-identical in three of ours and nothing detected
+  drift; `cliff.toml` and `.githooks/commit-msg` are copies from the same
+  place, checked by `sync.sh --check`.
 - Never edit `CHANGELOG.md` by hand — change the commit messages or the
   `commit_parsers` in `cliff.toml` instead.
 - Never create tags or Releases manually. A weights PR carries
