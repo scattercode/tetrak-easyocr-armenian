@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-09-01
+
+### Changed
+
+- Mirror the released weights onto the GitHub Release
+- Fold cross-script homoglyphs onto Armenian in recognised text
+- Ship the v2 weights, first release to pass tesseract -l hye
+
+### Fixed
+
+- Stop folding en/em dash in fold_script, measured net harmful
+
 ## [0.3.0] - 2026-08-31
 
 ### Changed
