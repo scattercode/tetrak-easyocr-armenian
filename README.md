@@ -6,12 +6,15 @@ Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 > **Status: alpha, shipping v3 weights.** `reader()` downloads a trained
 > model and works out of the box. v3 is v2 fine-tuned on real crops cut
 > from scanned pages, and with `fold_script()` it reads **0.771 word
-> recall on real scans — the highest measured here, ahead of
-> `tesseract -l hye` at 0.662 and of Marker at 0.766.** The model on its
-> own reads 0.736, so apply the fold (one line, below). Character
-> similarity is a separate and much weaker story, because on two-column
-> pages that metric measures reading order more than recognition. The
-> numbers are on the
+> recall on real scans — ahead of `tesseract -l hye` at 0.662 and of
+> Marker at 0.766, and two points behind Calfa's `hye-calfa-n` at
+> 0.789.** Calfa's model, measured on the same pages, is the strongest
+> Armenian OCR here; it is CC BY-NC 4.0. This one is the strongest
+> **permissively licensed** reader of the script measured on this
+> material. The model on its own reads 0.736, so apply the fold (one
+> line, below). Character similarity is a separate and much weaker
+> story, because on two-column pages that metric measures reading order
+> more than recognition. The numbers are on the
 > [model card](https://huggingface.co/tetrak/easyocr-armenian).
 >
 > **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
