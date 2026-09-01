@@ -3,14 +3,19 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: alpha, shipping v1 weights.** `reader()` downloads a trained
-> model and works out of the box. Be clear-eyed about what it is: v1 beats
-> stock EasyOCR by roughly 16x on word recall, but it does **not** yet beat
-> `tesseract -l hye`. If you want the best available Armenian OCR today and
-> are not tied to EasyOCR, use Tesseract. Use this if you are building on
-> EasyOCR, or want an Armenian base to fine-tune. The numbers, measured on
-> real scans, are on the
-> [model card](https://huggingface.co/tetrak/easyocr-armenian).
+> **Status: alpha, shipping v2 weights.** `reader()` downloads a trained
+> model and works out of the box. Measured on real scans, **v2 paired with
+> `fold_script()` reads 0.692 word recall against `tesseract -l hye`'s
+> 0.662** — the first of these releases to pass it. The model on its own
+> reads 0.607, so apply the fold (one line, below); character similarity
+> is a separate and much weaker story, because on two-column pages that
+> metric measures reading order more than recognition. The numbers are on
+> the [model card](https://huggingface.co/tetrak/easyocr-armenian).
+>
+> **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
+> labels carrying quotation marks the images do not show, and with no
+> class for the abbreviation dot `․` (U+2024) at all. The model card
+> records both.
 
 ## Usage
 
@@ -112,9 +117,10 @@ synthetic line crops: text from human-proofread pages of the Armenian
 Soviet Encyclopedia on
 [Armenian Wikisource](https://hy.wikisource.org/) (CC BY-SA 3.0),
 rendered in Armenian faces at real scan sizes and degraded to look
-scanned. v1 is trained on that synthetic data alone — fine-tuning on
-crops cut from actual scans is the next step, and the one expected to
-close the remaining gap to Tesseract.
+scanned. v2 is trained on that synthetic data alone — fine-tuning on
+crops cut from actual scans is the next step, targeting the shape
+confusions that remain on degraded letterpress, which a cleanly
+rendered font cannot teach.
 
 Every weights release carries a provenance record — data recipe, fonts,
 dataset revision, training config and checksums — published as
