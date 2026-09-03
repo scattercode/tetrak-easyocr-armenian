@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-03
+
+### Changed
+
+- V3 is the strongest permissively licensed reader, not the strongest
+- Correct the fold description and point at the release skill
+- Take the version computation from the shared release pipeline
+- Run the pre-push suite through the project's own interpreter
+- Ship the v5 weights -- both dialects, eight registers, new charset (#7)
+
 ## [0.5.0] - 2026-09-01
 
 ### Changed
