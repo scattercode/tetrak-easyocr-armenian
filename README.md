@@ -3,18 +3,22 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: alpha, shipping v3 weights.** `reader()` downloads a trained
-> model and works out of the box. v3 is v2 fine-tuned on real crops cut
-> from scanned pages, and with `fold_script()` it reads **0.771 word
-> recall on real scans — ahead of `tesseract -l hye` at 0.662 and of
-> Marker at 0.766, and two points behind Calfa's `hye-calfa-n` at
-> 0.789.** Calfa's model, measured on the same pages, is the strongest
-> Armenian OCR here; it is CC BY-NC 4.0. This one is the strongest
-> **permissively licensed** reader of the script measured on this
-> material. The model on its own reads 0.736, so apply the fold (one
-> line, below). Character similarity is a separate and much weaker
-> story, because on two-column pages that metric measures reading order
-> more than recognition. The numbers are on the
+> **Status: alpha, shipping v5 weights.** `reader()` downloads a trained
+> model and works out of the box. v5 is pre-trained on synthetic crops
+> from eleven encyclopedia volumes and seven further works — Western
+> Armenian literature, a scholarly history, a second encyclopedia, a
+> bilingual dictionary — then fine-tuned on 51,078 real crops cut from
+> 520 scanned pages. It reads **0.824 word recall on the held-out
+> encyclopedia scans — ahead of every engine measured on those pages,
+> including PaddleOCR's Armenian model at 0.807 and Calfa's CC BY-NC
+> `hye-calfa-n` at 0.789** — and, unlike its predecessors, it holds up
+> across registers: 0.60–0.91 word recall on eight held-out sets
+> spanning both dialects, where v3 fell to 0.23–0.33 outside the
+> encyclopedia it was tuned on. `fold_script()` now adds only ~0.005
+> (v5 emits Armenian forms directly rather than Latin homoglyphs), but
+> keep it on: it never hurts. Character similarity is a separate and
+> much weaker story, because on multi-column pages that metric measures
+> reading order more than recognition. The numbers are on the
 > [model card](https://huggingface.co/tetrak/easyocr-armenian).
 >
 > **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
@@ -118,16 +122,20 @@ this entirely.)
 
 The model is trained by
 [tetrak-hy-trainer](https://github.com/scattercode/tetrak-hy-trainer) on
-synthetic line crops: text from human-proofread pages of the Armenian
-Soviet Encyclopedia on
-[Armenian Wikisource](https://hy.wikisource.org/) (CC BY-SA 3.0),
-rendered in Armenian faces at real scan sizes and degraded to look
-scanned. v2 was trained on that synthetic data alone; **v3 adds a
-fine-tune on 6,097 real crops** cut from 30 human-proofread scans and
-labelled from their transcripts, mixed with the synthetic set so the
-model adapts to real print without forgetting the breadth it started
-with. That is what closed the gap: it targets the shape confusions on
-degraded letterpress that a cleanly rendered font cannot teach.
+synthetic line crops: text from human-proofread pages on
+[Armenian Wikisource](https://hy.wikisource.org/) (CC BY-SA 3.0) —
+eleven volumes of the Armenian Soviet Encyclopedia plus the collected
+works of Otyan, Totovents, Baronian and Tumanyan, Faustus of Byzantium,
+a popular medical encyclopedia and an Armenian–English dictionary —
+rendered in fifteen Armenian faces at real scan sizes and degraded to
+look scanned. **v5 then adds a fine-tune on 51,078 real crops** cut from
+520 human-proofread scans of all twelve sources and labelled from their
+transcripts, mixed with the synthetic set so the model adapts to real
+print without forgetting the breadth it started with. The widened
+corpus is what taught it both dialects and several registers rather
+than one encyclopedia's typography; the real-crop fine-tune is what
+closed the gap on degraded letterpress that a cleanly rendered font
+cannot teach.
 
 Every weights release carries a provenance record — data recipe, fonts,
 dataset revision, training config and checksums — published as
