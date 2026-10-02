@@ -34,6 +34,7 @@ beam-searched.
 
 from __future__ import annotations
 
+import gzip
 import math
 import re
 from collections import defaultdict
@@ -66,10 +67,13 @@ def load_wordlist(path: Path | str, min_count: int = 2) -> frozenset[str]:
     """Words from a ``word<TAB>count`` file, keeping those seen *min_count* times.
 
     A word seen once in a large corpus is as likely a transcription slip as
-    a word, so the default drops them.
+    a word, so the default drops them. A ``.gz`` file is read compressed,
+    which is how the published list ships.
     """
     words = set()
-    with Path(path).open(encoding="utf-8") as handle:
+    path = Path(path)
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8") as handle:
         for line in handle:
             word, _, count = line.rstrip("\n").partition("\t")
             if word and (not count or int(count) >= min_count):

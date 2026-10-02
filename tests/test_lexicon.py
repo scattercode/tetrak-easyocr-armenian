@@ -83,6 +83,14 @@ class TestWordList:
         path.write_text("Աբ,\t5\nգդ\t1\nդդ\n", encoding="utf-8")
         assert lexicon.load_wordlist(path) == {"աբ", "դդ"}
 
+    def test_a_compressed_list_is_read(self, tmp_path) -> None:
+        import gzip
+
+        path = tmp_path / "words.tsv.gz"
+        with gzip.open(path, "wt", encoding="utf-8") as handle:
+            handle.write("աբ\t3\n")
+        assert lexicon.load_wordlist(path) == {"աբ"}
+
     def test_the_armenian_comma_is_punctuation_not_a_letter(self) -> None:
         """U+055D sits between the Armenian letter ranges; it must not join the key."""
         assert lexicon.core("գրել՝") == "գրել"
