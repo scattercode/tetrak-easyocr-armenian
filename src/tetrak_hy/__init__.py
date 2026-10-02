@@ -101,6 +101,15 @@ WEIGHTS_URL: str | None = (
 WEIGHTS_SHA256: str | None = "07fa77263eed7333bcaed377bd55b6707c9f346d3643d3acec838302a8450947"
 
 
+# The word list tetrak_hy.lexicon decodes with, published from v6 on beside
+# the weights at the same Hub revision, and pinned the same way: URL and
+# checksum together or neither. None means no list has been released, and
+# wordlist() refuses rather than loading something it cannot verify.
+WORDLIST_URL: str | None = None
+WORDLIST_SHA256: str | None = None
+WORDLIST_NAME = "wordlist.tsv.gz"
+
+
 class WeightsNotAvailableError(RuntimeError):
     """Raised when no verified weights are released, supplied or cached."""
 
@@ -211,25 +220,30 @@ def _download_weights(destination: Path) -> None:
         WeightsNotAvailableError: The download failed, or its bytes did not
             match :data:`WEIGHTS_SHA256`.
     """
+    _download_verified(WEIGHTS_URL, WEIGHTS_SHA256, destination, "weights")
+
+
+def _download_verified(url: str, expected: str, destination: Path, what: str) -> None:
+    """Fetch *url*, check it against *expected*, and write it atomically."""
     import requests
 
     try:
-        response = requests.get(WEIGHTS_URL, timeout=300)
+        response = requests.get(url, timeout=300)
         response.raise_for_status()
     except Exception as error:
         raise WeightsNotAvailableError(
-            f"Could not download the tetrak_hy weights from {WEIGHTS_URL}: {error}. "
+            f"Could not download the tetrak_hy {what} from {url}: {error}. "
             f"If this machine has no outbound access, fetch them elsewhere and save "
             f"them as {destination}; they are verified against SHA-256 "
-            f"{WEIGHTS_SHA256} on every load, so a correct copy is never "
-            f"re-downloaded. The weights and their checksum are published at "
+            f"{expected} on every load, so a correct copy is never "
+            f"re-downloaded. The {what} and their checksum are published at "
             f"{MODEL_REPO_URL}"
         ) from error
 
     digest = hashlib.sha256(response.content).hexdigest()
-    if digest != WEIGHTS_SHA256:
+    if digest != expected:
         raise WeightsNotAvailableError(
-            f"Downloaded weights failed their checksum: expected {WEIGHTS_SHA256}, "
+            f"Downloaded {what} failed their checksum: expected {expected}, "
             f"got {digest}. Refusing to install them."
         )
 
@@ -290,9 +304,40 @@ def _materialise_weights(directory: Path, weights_path: Path | str | None) -> Pa
     return destination
 
 
+def wordlist_path(cache_dir: Path | str | None = None) -> Path:
+    """A verified copy of the released word list, downloaded on first use.
+
+    Cached as ``<cache>/wordlist.tsv.gz`` and hashed against
+    :data:`WORDLIST_SHA256` on every call, exactly as the weights are.
+
+    Raises:
+        WeightsNotAvailableError: No word list has been released, or none
+            could be downloaded and verified.
+    """
+    directory = _prepare_cache_dir(cache_dir)
+    destination = directory / WORDLIST_NAME
+    if WORDLIST_URL is None or WORDLIST_SHA256 is None:
+        raise WeightsNotAvailableError(
+            f"No tetrak_hy word list has been released yet, so there is no published "
+            f"checksum to verify {destination} against. Build one with the trainer's "
+            f"scripts/build_wordlist.py and pass it to lexicon.load_wordlist()."
+        )
+    if not (destination.exists() and _sha256(destination) == WORDLIST_SHA256):
+        _download_verified(WORDLIST_URL, WORDLIST_SHA256, destination, "word list")
+    return destination
+
+
+def wordlist(cache_dir: Path | str | None = None) -> frozenset[str]:
+    """The released word list, loaded for :mod:`tetrak_hy.lexicon`."""
+    from .lexicon import load_wordlist
+
+    return load_wordlist(wordlist_path(cache_dir))
+
+
 def reader(
     weights_path: Path | str | None = None,
     cache_dir: Path | str | None = None,
+    lexicon: bool = False,
     **reader_kwargs,
 ):
     """Return an ``easyocr.Reader`` configured with the Armenian model.
@@ -314,6 +359,9 @@ def reader(
             downloads a second copy of the detector.
         cache_dir: Where to materialise the config and weights. Defaults to
             ``$TETRAK_HY_HOME``, and then to ``~/.tetrak_hy``.
+        lexicon: Also install :mod:`tetrak_hy.lexicon`'s decoder with the
+            released word list. It acts on ``readtext(...,
+            decoder="beamsearch")`` calls; greedy calls are unchanged.
         **reader_kwargs: Passed through to ``easyocr.Reader`` — ``gpu=``,
             ``verbose=`` and friends.
 
@@ -337,10 +385,15 @@ def reader(
     # lang_char always includes this model's full character_list, so the
     # filter is empty whichever language is requested. Hidden here so no
     # user ever has to know.
-    return easyocr.Reader(
+    built = easyocr.Reader(
         ["en"],
         recog_network=NETWORK_NAME,
         user_network_directory=str(directory),
         model_storage_directory=str(weights.parent),
         **reader_kwargs,
     )
+    if lexicon:
+        from .lexicon import use_lexicon
+
+        use_lexicon(built, wordlist(cache_dir))
+    return built
