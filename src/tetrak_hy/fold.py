@@ -44,6 +44,7 @@ full stops. It is fixed by widening the charset, not by this fold.
 from __future__ import annotations
 
 import re
+import unicodedata
 
 # Ա–Ֆ (uppercase), ա–ֆ (lowercase), և (the ligature) -- the same three
 # ranges tetrak-hy-trainer's charset.py builds ARMENIAN_UPPER/LOWER from.
@@ -68,8 +69,26 @@ _HOMOGLYPHS = {
 
 _TOKEN = re.compile(r"\S+")
 
+# Armenian letters the model reads for the digit 2 in bold and italic
+# faces. ``Չ`` and ``շ`` share the digit's top curve and foot, and the
+# Faustus of Byzantium index -- page numbers set in bold italic -- came out
+# as "Չ51", "ՉՉ3", "22շ". Inside a token that is otherwise numbers and
+# punctuation, neither letter can be meant, so they are read as the digit
+# (brief 013: Faustus word recall 0.908 -> 0.916, no other register moved).
+_DIGIT_TWO_LOOKALIKES = str.maketrans({"Չ": "2", "շ": "2"})
+
+
+def _is_numeric_token(token: str) -> bool:
+    """A number with its punctuation, allowing for ``Չ``/``շ`` misread for 2."""
+    return any(character.isdigit() for character in token) and all(
+        character.isdigit() or character in "Չշ" or unicodedata.category(character).startswith("P")
+        for character in token
+    )
+
 
 def _fold_token(token: str) -> str:
+    if _is_numeric_token(token):
+        return token.translate(_DIGIT_TWO_LOOKALIKES)
     if not any(character in _ARMENIAN_LETTERS for character in token):
         return token
     return "".join(_HOMOGLYPHS.get(character, character) for character in token)

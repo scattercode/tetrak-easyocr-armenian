@@ -78,3 +78,19 @@ class TestIdempotence:
         text = "hայ oրեր Երևան: 1886–ին"
         once = fold_script(text)
         assert fold_script(once) == once
+
+
+class TestDigitTwo:
+    """``Չ`` and ``շ`` read for the digit 2 in bold and italic numbers (brief 013)."""
+
+    def test_a_page_number_is_read_as_digits(self) -> None:
+        assert fold_script("Չ51, ՉՉ3, 22շ") == "251, 223, 222"
+
+    def test_punctuation_around_the_number_is_kept(self) -> None:
+        assert fold_script("(Եր. Չ84).") == "(Եր. 284)."
+
+    def test_an_armenian_word_with_the_letter_is_untouched(self) -> None:
+        assert fold_script("Չորս շատ") == "Չորս շատ"
+
+    def test_the_letter_alone_is_not_a_number(self) -> None:
+        assert fold_script("Չ, շ") == "Չ, շ"
