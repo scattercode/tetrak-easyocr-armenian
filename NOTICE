@@ -9,3 +9,9 @@ tetrak-hy-trainer (https://github.com/scattercode/tetrak-hy-trainer) and
 are trained in part on text from Armenian Wikisource's edition of the
 Armenian Soviet Encyclopedia (https://hy.wikisource.org/, CC BY-SA 3.0);
 per-release attribution and provenance accompany each release.
+
+The word list published beside the weights from v6 on (wordlist.tsv.gz) is
+derived from proofread Armenian Wikisource transcripts (CC BY-SA 3.0) and
+includes the Nayiri Armenian Lexicon, (c) Serouj Ourishian, licensed under
+CC BY 4.0 (http://www.nayiri.com/nayiri-armenian-lexicon), with its word
+forms added at the list's minimum count.

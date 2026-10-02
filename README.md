@@ -3,23 +3,19 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: alpha, shipping v5 weights.** `reader()` downloads a trained
-> model and works out of the box. v5 is pre-trained on synthetic crops
-> from eleven encyclopedia volumes and seven further works — Western
-> Armenian literature, a scholarly history, a second encyclopedia, a
-> bilingual dictionary — then fine-tuned on 51,078 real crops cut from
-> 520 scanned pages. It reads **0.824 word recall on the held-out
-> encyclopedia scans — ahead of every engine measured on those pages,
-> including PaddleOCR's Armenian model at 0.807 and Calfa's CC BY-NC
-> `hye-calfa-n` at 0.789** — and, unlike its predecessors, it holds up
-> across registers: 0.60–0.91 word recall on eight held-out sets
-> spanning both dialects, where v3 fell to 0.23–0.33 outside the
-> encyclopedia it was tuned on. `fold_script()` now adds only ~0.005
-> (v5 emits Armenian forms directly rather than Latin homoglyphs), but
-> keep it on: it never hurts. Character similarity is a separate and
-> much weaker story, because on multi-column pages that metric measures
-> reading order more than recognition. The numbers are on the
+> **Status: alpha, shipping v6 weights and a word list.** `reader()`
+> downloads a trained model and works out of the box. v6 is v5 fine-tuned
+> on 99,521 real crops cut from the scans of sixteen works: an encyclopedia,
+> a medical encyclopedia, a bilingual dictionary, a scholarly history and
+> literary editions in both dialects. With `fold_script()` and the word
+> list, it leads every Armenian engine we have measured on word recall on
+> three of eight held-out registers, and is within a thousandth on a
+> fourth. The numbers, and the registers it still trails on, are on the
 > [model card](https://huggingface.co/tetrak/easyocr-armenian).
+>
+> Figures published for v5 and earlier used a character-similarity metric
+> later found to be wrong (difflib's `autojunk`) and are not comparable
+> with v6's.
 >
 > **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
 > labels carrying quotation marks the images do not show, and with no
@@ -88,6 +84,30 @@ It only touches a token that already contains an Armenian letter, so
 Latin or Cyrillic text sharing a page is left alone. See the function's
 docstring for the exact scope and what it deliberately does not fold.
 
+## Correcting words with the word list
+
+The network reads one character at a time, so a word it misreads by one
+letter comes out as written, even when the right word was its own second
+choice. `reader(lexicon=True)` downloads the released word list (1.1
+million Armenian word forms, verified and cached like the weights) and
+corrects out-of-vocabulary words from the model's own alternatives:
+
+```python
+reader = tetrak_hy.reader(lexicon=True)
+results = [
+    (bbox, tetrak_hy.fold_script(text), confidence)
+    for bbox, text, confidence in reader.readtext("scan.png", decoder="beamsearch")
+]
+```
+
+`decoder="beamsearch"` is how the model's probabilities reach the
+correction; greedy calls are unchanged. A word is only replaced by a listed
+reading the model itself found nearly as probable, and keeps its
+punctuation. What it can break is what any word list breaks: proper nouns,
+and classical or edition spellings the list does not know. On held-out
+pages it fixed 465 words for every 13 it broke. To use your own list, pass
+it to `tetrak_hy.lexicon.use_lexicon(reader, tetrak_hy.lexicon.load_wordlist(path))`.
+
 ## What it is
 
 EasyOCR does not ship Armenian. This package adds it as a
@@ -128,14 +148,22 @@ eleven volumes of the Armenian Soviet Encyclopedia plus the collected
 works of Otyan, Totovents, Baronian and Tumanyan, Faustus of Byzantium,
 a popular medical encyclopedia and an Armenian–English dictionary —
 rendered in fifteen Armenian faces at real scan sizes and degraded to
-look scanned. **v5 then adds a fine-tune on 51,078 real crops** cut from
-520 human-proofread scans of all twelve sources and labelled from their
-transcripts, mixed with the synthetic set so the model adapts to real
-print without forgetting the breadth it started with. The widened
+look scanned. v5 added a fine-tune on real crops cut from human-proofread
+scans and labelled from their transcripts, mixed with the synthetic set
+so the model adapts to real print without forgetting the breadth it
+started with. **v6 continues that fine-tune on 99,521 real crops from
+862 scans of sixteen sources**, including more volumes of the editions
+v5 read least well. The widened
 corpus is what taught it both dialects and several registers rather
 than one encyclopedia's typography; the real-crop fine-tune is what
 closed the gap on degraded letterpress that a cleanly rendered font
 cannot teach.
+
+The word list counts words in the same proofread transcripts, with the
+evaluation pages excluded, and adds every word form of the
+[Nayiri Armenian Lexicon](http://www.nayiri.com/nayiri-armenian-lexicon)
+(© Serouj Ourishian, CC BY 4.0). It is published beside the weights as
+`wordlist.tsv.gz`.
 
 Every weights release carries a provenance record — data recipe, fonts,
 dataset revision, training config and checksums — published as
