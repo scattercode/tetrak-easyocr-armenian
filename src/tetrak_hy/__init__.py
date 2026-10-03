@@ -84,7 +84,7 @@ MODEL_REPO_URL = "https://huggingface.co/tetrak/easyocr-armenian"
 # The model version these weights are, as tagged on the Hub. The URL below
 # resolves the tag's commit rather than the tag itself: a tag can be moved,
 # a commit cannot, so what ships here is exactly what was reviewed.
-WEIGHTS_VERSION = "v5"
+WEIGHTS_VERSION = "v6"
 
 # Filled in by the first weights release; None means "not yet released".
 # Each release updates both together — a URL without its checksum must
@@ -93,20 +93,24 @@ WEIGHTS_VERSION = "v5"
 # version by construction, since CTC class indices are positional. v5
 # widened the charset again (170 → 175 classes: ellipsis, square
 # brackets, numero sign, superscript two), so its head cannot be read
-# under v3's yaml or the reverse.
+# under v3's yaml or the reverse. v6 is a fine-tune of v5 on the same
+# 175 classes, so the yaml is unchanged.
 WEIGHTS_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "bc1320b61104d2d3219f5d447e1b4fed8622e4d9/tetrak_hy.pth"
+    "9edcb94edbe9edac8e0dd16e376c2650613667f8/tetrak_hy.pth"
 )
-WEIGHTS_SHA256: str | None = "07fa77263eed7333bcaed377bd55b6707c9f346d3643d3acec838302a8450947"
+WEIGHTS_SHA256: str | None = "19934f01854b1d371ea2aabb0aac166e3fa88b404a83f31185f180b31da8701b"
 
 
 # The word list tetrak_hy.lexicon decodes with, published from v6 on beside
 # the weights at the same Hub revision, and pinned the same way: URL and
 # checksum together or neither. None means no list has been released, and
 # wordlist() refuses rather than loading something it cannot verify.
-WORDLIST_URL: str | None = None
-WORDLIST_SHA256: str | None = None
+WORDLIST_URL: str | None = (
+    "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
+    "9edcb94edbe9edac8e0dd16e376c2650613667f8/wordlist.tsv.gz"
+)
+WORDLIST_SHA256: str | None = "6cc3cd02e14a9749c67188e7d061bcc064ed3bd56c5f7e7babf9c5abea089e9a"
 WORDLIST_NAME = "wordlist.tsv.gz"
 
 
