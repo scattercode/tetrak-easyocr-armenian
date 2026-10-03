@@ -8,14 +8,17 @@ Guidance for Claude Code when working in this repository.
 EasyOCR. It is the distribution third of a three-repo arrangement decided
 in Tetrak's ADR 001 (product zone, private):
 
-- **tetrak-hy-trainer** (public) *produces* the model — its output
-  arrives here as a pull request carrying weights and provenance.
-- **This repo** (public, Apache 2.0) *ships* it — the `tetrak_hy` import
-  package, the packaged network config, and the weights as GitHub
-  Release assets. A weights release **is** a library release: one
-  version number covers wheel, weights and provenance together.
-- **Tetrak** (the pipeline behind [tetrak.dev](https://tetrak.dev/))
-  *consumes* it as the `easyocr-hy` backend, like any other engine.
+- **tetrak-hy-trainer** (public) *produces* the model: it uploads the
+  weights, the word list and their provenance to the Hugging Face model
+  repository `tetrak/easyocr-armenian`.
+- **This repo** (public, Apache 2.0) *ships* it: the `tetrak_hy` import
+  package on PyPI, the packaged network config, lexicon-aided decoding, and
+  the pins (Hub commit and checksums) for the weights and the word list. A
+  weights release **is** a library release: one version number covers wheel,
+  weights and provenance together.
+- **Tetrak** (public; the pipeline behind [tetrak.dev](https://tetrak.dev/))
+  *consumes* it as the `easyocr-hy` backend, like any other engine, through
+  its `[armenian]` extra.
 
 The audience is EasyOCR users, most of whom will never hear of Tetrak.
 Write the README and errors for them.
@@ -75,9 +78,24 @@ package**. That carries obligations:
   next plain `reader()` call loads.
 - Every release carries the trainer's provenance record (data recipe,
   fonts, crop counts, training config, git SHAs) in its release notes.
-- The Armenian Soviet Encyclopedia training data is CC BY-SA 3.0 from
-  Armenian Wikisource; the attribution travels in the release notes and
-  the README's provenance section.
+- The Armenian Wikisource training text is CC BY-SA 3.0; the attribution
+  travels in the release notes and the README's provenance section.
+
+### The word list
+
+- `wordlist()` and `reader(lexicon=True)` download the released word list
+  (`wordlist.tsv.gz`, from the same Hub commit as the weights) and verify it
+  exactly as the weights are verified: `WORDLIST_URL` and `WORDLIST_SHA256`
+  move together, and no published checksum means no load.
+- It is **CC BY-SA 4.0**, not Apache 2.0: counted from CC BY-SA Wikisource
+  text, with the CC BY 4.0 Nayiri Armenian Lexicon in it. `NOTICE` and the
+  README say so, with the Nayiri credit. It is downloaded on request, never
+  shipped in the wheel; keep it that way.
+- `tetrak_hy.lexicon` only reaches the model's probabilities through
+  EasyOCR's `beamsearch` decoder hook, so callers pass
+  `decoder="beamsearch"`; without it `readtext` decodes greedily as before.
+  A candidate reading is always a single word: the space class is excluded
+  from a word's alternatives.
 
 ### Quarantine (inherited from the trainer)
 
@@ -139,11 +157,12 @@ commit type that cuts the right version, and the mirror job — load the
   place, checked by `sync.sh --check`.
 - Never edit `CHANGELOG.md` by hand — change the commit messages or the
   `commit_parsers` in `cliff.toml` instead.
-- Never create tags or Releases manually. A weights PR carries
-  `WEIGHTS_URL` / `WEIGHTS_SHA256` pointing at the Hub revision the
-  trainer published, so the library release and the weights it fetches
-  are decided before the automation runs. Code-only releases carry no
-  weights and leave `WEIGHTS_URL` untouched.
+- Never create tags or Releases manually. A release publishes the wheel to
+  PyPI through Trusted Publisher, so **merging a `feat` or `fix` to `main`
+  ships it to users**. A weights PR carries the URLs and checksums for the
+  Hub revision the trainer published, so the library release and what it
+  fetches are decided before the automation runs. Code-only releases leave
+  the pins untouched.
 - **The package version comes from the git tag**, via `hatch-vcs`. Do not
   add a `version = "..."` literal back to `pyproject.toml` — nothing
   updates it, so it silently goes stale. `src/tetrak_hy/_version.py` is
