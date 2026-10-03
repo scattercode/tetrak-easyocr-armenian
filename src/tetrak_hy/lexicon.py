@@ -172,8 +172,12 @@ class LexiconDecoder:
         """CTC prefix beam search over one word's frames; [(text, log p)], best first."""
         beams: dict[tuple[int, ...], tuple[float, float]] = {(): (1.0, 0.0)}
         log_scale = 0.0
+        # One word's alternatives are single words: a reading with a space in
+        # it is two words, and dropping the space would let it stand in for a
+        # listed word the model never proposed.
+        excluded = set(self.ignore) | {self.space}
         for row in rows:
-            options = [c for c, p in enumerate(row) if p > prune and c not in self.ignore]
+            options = [c for c, p in enumerate(row) if p > prune and c not in excluded]
             following: dict[tuple[int, ...], list[float]] = defaultdict(lambda: [0.0, 0.0])
             for prefix, (p_blank, p_char) in beams.items():
                 total = p_blank + p_char
@@ -194,7 +198,7 @@ class LexiconDecoder:
                 log_scale += math.log(top)
         scored = [
             (
-                "".join(self.character[c] for c in prefix if c != self.space),
+                "".join(self.character[c] for c in prefix),
                 log_scale + math.log(max(pb + pc, 1e-300)),
             )
             for prefix, (pb, pc) in beams.items()

@@ -76,6 +76,11 @@ class TestWhatIsNeverTouched:
         mat = AMBIGUOUS + [frame(COMMA, BLANK, 0.45)]
         assert decoder({"ադ"}).decode(mat) == "ադ,"
 
+    def test_a_space_in_an_alternative_does_not_join_two_words(self) -> None:
+        """Reading "ա դ" is two words; it must not stand in for the listed "ադ"."""
+        mat = [frame(A), frame(BLANK), frame(B, SPACE, 0.45), frame(BLANK), frame(D)]
+        assert decoder({"ադ"}).decode(mat) == "աբդ"
+
 
 class TestWordList:
     def test_rare_words_are_dropped_and_keys_are_bare(self, tmp_path) -> None:
