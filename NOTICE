@@ -14,4 +14,8 @@ The word list published beside the weights from v6 on (wordlist.tsv.gz) is
 derived from proofread Armenian Wikisource transcripts (CC BY-SA 3.0) and
 includes the Nayiri Armenian Lexicon, (c) Serouj Ourishian, licensed under
 CC BY 4.0 (http://www.nayiri.com/nayiri-armenian-lexicon), with its word
-forms added at the list's minimum count.
+forms added at the list's minimum count. Because it is derived from those
+sources, the word list is licensed under CC BY-SA 4.0
+(https://creativecommons.org/licenses/by-sa/4.0/), not under this package's
+Apache License 2.0. It is downloaded on request, not distributed in the
+package.

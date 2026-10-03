@@ -163,7 +163,8 @@ The word list counts words in the same proofread transcripts, with the
 evaluation pages excluded, and adds every word form of the
 [Nayiri Armenian Lexicon](http://www.nayiri.com/nayiri-armenian-lexicon)
 (© Serouj Ourishian, CC BY 4.0). It is published beside the weights as
-`wordlist.tsv.gz`.
+`wordlist.tsv.gz`, under CC BY-SA 4.0 because of those sources, and is
+downloaded only when `reader(lexicon=True)` or `wordlist()` asks for it.
 
 Every weights release carries a provenance record — data recipe, fonts,
 dataset revision, training config and checksums — published as
@@ -181,7 +182,8 @@ Apache License 2.0 — see
 [LICENSE](https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/LICENSE)
 and
 [NOTICE](https://github.com/scattercode/tetrak-easyocr-armenian/blob/main/NOTICE).
-The architecture re-exported here is EasyOCR's (Apache 2.0).
+The architecture re-exported here is EasyOCR's (Apache 2.0). The word list the package downloads on request is CC BY-SA 4.0, not
+Apache 2.0; see above.
 
 ## Development
 
