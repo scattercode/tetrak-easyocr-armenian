@@ -40,7 +40,7 @@ class TestPackagedConfig:
         assert len(characters) == len(set(characters))
 
     def test_lang_list_authorises_the_loading_language(self) -> None:
-        """reader() constructs Reader(['en']) — see CLAUDE.md — so the yaml
+        """reader() constructs Reader(['en']) — see AGENTS.md — so the yaml
         must authorise 'en' or loading fails at setModelLanguage."""
         assert "en" in packaged_config()["lang_list"]
         assert "hy" in packaged_config()["lang_list"]
