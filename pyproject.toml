@@ -13,12 +13,13 @@ name = "tetrak-easyocr-armenian"
 dynamic = ["version"]
 description = "Armenian language support for EasyOCR — a trained recognition model, installable as a custom network"
 readme = "README.md"
-# 3.10, not easyocr's own 3.9 floor: 3.9 went end-of-life in October 2025,
-# and holding it forced the universal lock onto the last pillow and urllib3
-# releases that supported it -- both carrying fixed HIGH CVEs, which failed
-# the Trivy gate. Still below the sibling repos' 3.11: this library runs in
-# other people's environments and meets the supported ones where they are.
-requires-python = ">=3.10"
+# 3.11, not easyocr's own 3.9 floor. Each floor went the same way: 3.9 went
+# end-of-life in October 2025 and 3.10 in October 2026, and holding either
+# forced the universal lock onto the last pillow, filelock and urllib3
+# releases that supported it -- all carrying fixed HIGH or CRITICAL CVEs,
+# which failed the Trivy gate. This library runs in other people's
+# environments and meets the supported ones where they are.
+requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 authors = [
@@ -31,7 +32,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Natural Language :: Armenian",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
