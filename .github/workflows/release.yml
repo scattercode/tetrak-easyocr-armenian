@@ -20,8 +20,9 @@ on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
+# Granted per job below, not here: a workflow-level grant reaches every job,
+# and only the release job and the mirror write to the repository.
+permissions: {}
 
 concurrency:
   group: release
@@ -32,6 +33,8 @@ jobs:
     # Belt and braces: never react to our own release commit.
     if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       released: ${{ steps.version.outputs.release }}
       version: ${{ steps.version.outputs.next }}
@@ -115,6 +118,9 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    # Write, because the last step attaches the weights to the release.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -153,6 +159,9 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    # Reads the tag and nothing more.
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
