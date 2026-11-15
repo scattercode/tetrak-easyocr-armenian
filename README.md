@@ -80,8 +80,12 @@ results = [
 ]
 ```
 
-Inside an Armenian word it only folds towards Armenian. A token with no
-Armenian letter is written in the one script it belongs to: the model
+Each token is read as one script before anything in it changes. Inside
+an Armenian word it only folds towards Armenian, whichever of the other
+two scripts the stray glyph came from (Cyrillic `о` as much as Latin
+`o`); the two-letter `եւ` and the ligature `և` are both Armenian and
+neither is folded to the other, so a page keeps its own form. A token
+with no Armenian letter is written in the one script it belongs to: the model
 reads Cyrillic as well as Latin, and the glyphs the two share (`а`/`a`,
 `р`/`p`, `с`/`c`) can come out in either, so `роог` on an English line
 becomes `poor`. A token made only of shared glyphs follows the text
@@ -134,7 +138,9 @@ Lexicon, and the decoder works on their union: a word in either list is
 accepted as written and never rewritten into the other's, and a word in
 neither is corrected to the most probable listed reading, whichever list
 holds it. Nothing decides which orthography a page is in, and nothing needs
-to. `tetrak_hy.wordlist()` returns the union; `wordlist_path()` and
+to. The same holds for `եւ` against `և`: the look-up key reads the two as
+one, so a word listed in either form is accepted in both and never
+corrected from the page's form to the other's. `tetrak_hy.wordlist()` returns the union; `wordlist_path()` and
 `classical_wordlist_path()` give the two files. Until a classical list is
 pinned (`CLASSICAL_WORDLIST_URL`), the modern list is used alone.
 

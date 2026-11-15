@@ -27,7 +27,11 @@ list is accepted as written, and a word in neither is corrected to the
 most probable listed reading, whichever list holds it. Nothing decides
 which orthography a page is in, and nothing needs to: a spelling the page
 really prints is in one of the lists, so it is never rewritten into the
-other's.
+other's. The same rule covers ``եւ`` against ``և``, one word printed two
+ways: the look-up key reads them as one, so a word listed in either form
+is in the vocabulary in both and is never corrected from the page's form
+to the other's. On v7's 21,574 held-out crops this moved nothing -- each
+list holds the form its presses set -- but it is the rule, not a finding.
 
 Using it::
 
@@ -75,8 +79,16 @@ _EDGES = re.compile(r"^([^\wԱ-Ֆա-և]*)(.*?)([^\wԱ-Ֆա-և]*)$", re.S)
 
 
 def core(word: str) -> str:
-    """*word* without leading or trailing punctuation, lower-cased: the look-up key."""
-    return _EDGES.match(word).group(2).lower()
+    """*word* without leading or trailing punctuation, lower-cased: the look-up key.
+
+    The two-letter ``եւ`` and the ligature ``և`` are one word printed two
+    ways (brief 014), so the key reads them as one: a word listed in either
+    form is in the vocabulary in both, and a page's own form is never
+    corrected to the other's. A correction returns the candidate's own text,
+    not its key. A word set given to :class:`LexiconDecoder` must be keyed
+    this way, as :func:`load_wordlist` keys it.
+    """
+    return _EDGES.match(word).group(2).lower().replace("եւ", "և")
 
 
 def load_wordlist(path: Path | str, min_count: int = 2) -> frozenset[str]:

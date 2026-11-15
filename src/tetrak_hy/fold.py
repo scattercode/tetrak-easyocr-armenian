@@ -62,6 +62,37 @@ with the stray Cyrillic tokens halved, the Soviet encyclopedia's Latin
 113 -> 122 of 179, and a word each on the medical encyclopedia and the
 Tumanyan notes. The rest of the dictionary's regression was plain Latin
 misreads, fixed in training rather than here.
+
+**Three scripts, one decision per token** (brief 014, issue #17). Every
+token is read as Armenian, Latin or Cyrillic, or left undecided, and
+only then are its glyphs written in that script. A token with any
+Armenian letter is Armenian whatever else it holds: the ground truth
+keeps no token that mixes Armenian with Cyrillic, so a Cyrillic letter
+inside one can never be meant, and the Cyrillic copies of the glyphs the
+Latin table already folds -- ``о`` and ``О`` for ``օ`` and ``Օ``, ``Н``
+for ``Հ`` -- are folded the same way. Nothing else is: on v7's readings
+of the eighteen evaluation registers, 43 Armenian tokens carried a
+Cyrillic letter, not one of them a shared glyph, and the commonest
+(``в`` for ``տ``, six times on the dictionary) is a shape confusion for
+training to fix, not a script one. A token with no Armenian letter is
+Latin or Cyrillic by the letters only one script has, or by its context
+when it has none, as above. So the ``h``, ``o`` and colon folds never
+touch a Cyrillic token: ``о`` in one stays ``о`` and a Latin ``o`` in one
+is written ``о``, not ``օ``; a colon after a Russian word stays a colon;
+and a Latin ``h`` beside unshared Cyrillic letters makes a token of two
+scripts, which is left as read.
+
+**եւ and և.** The two-letter sequence and the ligature (U+0587) are one
+word printed two ways: classical presses mostly set the two sorts,
+reformed presses the ligature, and the ground truth keeps what each page
+prints. The fold treats them as one by never choosing between them: both
+are Armenian letters for the token's script, and neither is rewritten
+into the other, so a reader gets the page's own form. Of the 2,442 tokens
+v7 emitted with either form on the eighteen registers, nine matched the
+page's word only once the two forms were scored as one, and the metric
+(``accuracy.normalise`` in Tetrak and the trainer) does score them so.
+The word list's look-up key reads them as one too, so
+:mod:`tetrak_hy.lexicon` never corrects a word from one form to the other.
 """
 
 from __future__ import annotations
@@ -78,17 +109,23 @@ _ARMENIAN_LETTERS = (
 )
 
 # Predicted character -> the Armenian form it is confused with, per the
-# error analysis's confusion table. Every value is deliberately absent
-# from these keys, so applying the fold twice is a no-op. No dash entry:
-# see the module docstring for why an unconditional swap does more harm
-# than good on this corpus.
-_HOMOGLYPHS = {
+# error analysis's confusion table, with the Cyrillic copy of each shared
+# glyph beside the Latin one (brief 014): о and О are the shape of o and
+# O, Н the shape of H. Every value is deliberately absent from these keys,
+# so applying the fold twice is a no-op. No dash entry: see the module
+# docstring for why an unconditional swap does more harm than good on
+# this corpus.
+_ARMENIAN_LOOKALIKES = {
     "h": "հ",
     "H": "Հ",
+    "Н": "Հ",
     "o": "օ",
     "O": "Օ",
+    "о": "օ",
+    "О": "Օ",
     ":": "։",
 }
+_TO_ARMENIAN = str.maketrans(_ARMENIAN_LOOKALIKES)
 
 _TOKEN = re.compile(r"\S+")
 
@@ -118,6 +155,11 @@ _LATIN_TO_CYRILLIC = {
 }  # fmt: skip
 _TO_LATIN = str.maketrans(_CYRILLIC_TO_LATIN)
 _TO_CYRILLIC = str.maketrans(_LATIN_TO_CYRILLIC)
+
+ARMENIAN = "armenian"
+LATIN = "latin"
+CYRILLIC = "cyrillic"
+_WRITTEN_IN = {ARMENIAN: _TO_ARMENIAN, LATIN: _TO_LATIN, CYRILLIC: _TO_CYRILLIC}
 _LATIN_LETTER = re.compile(r"[A-Za-z]")
 _CYRILLIC_LETTER = re.compile(r"[\u0400-\u04ff]")
 
@@ -147,25 +189,29 @@ def _dominant_script(context: str) -> str | None:
     ]
     latin, cyrillic = _unshared_counts(" ".join(others))
     if latin and latin >= _DOMINANCE * cyrillic:
-        return "latin"
+        return LATIN
     if cyrillic and cyrillic >= _DOMINANCE * latin:
-        return "cyrillic"
+        return CYRILLIC
     return None
 
 
-def _fold_latin_cyrillic(token: str, context_script: str | None) -> str:
-    """*token* (no Armenian letter) written in the one script it belongs to."""
+def _token_script(token: str, context_script: str | None) -> str | None:
+    """The one script *token* is read in, or ``None`` when nothing can say.
+
+    An Armenian letter makes it Armenian, whatever else it holds. Otherwise
+    the letters only Latin or only Cyrillic has decide it; a token with
+    such letters of both scripts is genuinely of two, and one with none
+    of either (shared glyphs alone, or no letters at all) follows its
+    context.
+    """
+    if any(character in _ARMENIAN_LETTERS for character in token):
+        return ARMENIAN
     if not (_LATIN_LETTER.search(token) or _CYRILLIC_LETTER.search(token)):
-        return token
+        return None
     latin, cyrillic = _unshared_counts(token)
     if latin and cyrillic:
-        return token
-    script = "latin" if latin else "cyrillic" if cyrillic else context_script
-    if script == "latin":
-        return token.translate(_TO_LATIN)
-    if script == "cyrillic":
-        return token.translate(_TO_CYRILLIC)
-    return token
+        return None
+    return LATIN if latin else CYRILLIC if cyrillic else context_script
 
 
 def _is_numeric_token(token: str) -> bool:
@@ -179,9 +225,8 @@ def _is_numeric_token(token: str) -> bool:
 def _fold_token(token: str, context_script: str | None = None) -> str:
     if _is_numeric_token(token):
         return token.translate(_DIGIT_TWO_LOOKALIKES)
-    if not any(character in _ARMENIAN_LETTERS for character in token):
-        return _fold_latin_cyrillic(token, context_script)
-    return "".join(_HOMOGLYPHS.get(character, character) for character in token)
+    script = _token_script(token, context_script)
+    return token.translate(_WRITTEN_IN[script]) if script else token
 
 
 def fold_script(text: str, *, context: str | None = None) -> str:
@@ -198,11 +243,13 @@ def fold_script(text: str, *, context: str | None = None) -> str:
             the context.
 
     Returns:
-        *text* with every homoglyph in each Armenian-containing token
-        folded to its Armenian or canonical form, and every other token
-        that mixes Latin and Cyrillic, or could be either, written in the
-        one script it belongs to. Digits, punctuation and tokens that are
-        genuinely of two scripts are returned unchanged.
+        *text* with each token written in the one script it is read in:
+        every Latin or Cyrillic lookalike in an Armenian-containing token
+        folded to its Armenian form, and every other token that mixes
+        Latin and Cyrillic, or could be either, written in the one script
+        it belongs to. Digits, punctuation and tokens that are genuinely
+        of two scripts are returned unchanged, and so are ``եւ`` and
+        ``և``, which are one word printed two ways.
     """
     script = _dominant_script(text if context is None else context)
     return _TOKEN.sub(lambda match: _fold_token(match.group(), script), text)

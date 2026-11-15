@@ -100,6 +100,17 @@ class TestWordList:
         """U+055D sits between the Armenian letter ranges; it must not join the key."""
         assert lexicon.core("գրել՝") == "գրել"
 
+    def test_the_two_letter_ew_and_the_ligature_share_a_key(self) -> None:
+        """Brief 014: one word printed two ways is one key, whichever form a list or a page uses."""
+        assert lexicon.core("նաեւ") == lexicon.core("նաև")
+
+    def test_a_word_listed_in_one_form_is_in_the_vocabulary_in_both(self, tmp_path) -> None:
+        path = tmp_path / "words.tsv"
+        path.write_text("նաեւ\t5\n", encoding="utf-8")
+        words = lexicon.load_wordlist(path)
+        assert lexicon.core("նաև") in words
+        assert lexicon.core("նաեւ,") in words
+
 
 # A second alphabet for the orthography pair նոյն (classical) / նույն
 # (reformed): the reformed spelling has a ւ the classical one has not.
@@ -168,6 +179,39 @@ class TestTwoOrthographies:
         (tmp_path / "classical.tsv").write_text("նոյն\t3\n", encoding="utf-8")
         words = lexicon.load_wordlists(tmp_path / "modern.tsv", tmp_path / "classical.tsv")
         assert words == {"նույն", "նոյն"}
+
+
+# A third alphabet for եւ against և: the same word, as two sorts or one.
+EW = ["[blank]", " ", "ն", "ա", "ե", "ւ", "և"]
+E_BLANK, E_SPACE, E_N, E_A, E_E, E_W, E_LIG = range(len(EW))
+
+
+def ew_reading(*classes: int) -> list[list[float]]:
+    rows = []
+    for c in classes:
+        for winner in (c, E_BLANK):
+            row = [1e-6] * len(EW)
+            row[winner] = 1.0
+            rows.append([p / sum(row) for p in row])
+    return rows
+
+
+def ew_decoder(*listed: str) -> lexicon.LexiconDecoder:
+    return lexicon.LexiconDecoder(EW, [0], frozenset(map(lexicon.core, listed)))
+
+
+class TestEwLigature:
+    """Brief 014: a word listed in either form is accepted in both, and never rewritten."""
+
+    def test_the_fixtures_read_as_meant(self) -> None:
+        assert ew_decoder().decode(ew_reading(E_N, E_A, E_E, E_W)) == "նաեւ"
+        assert ew_decoder().decode(ew_reading(E_N, E_A, E_LIG)) == "նաև"
+
+    def test_the_two_letter_reading_of_a_word_listed_as_the_ligature_is_kept(self) -> None:
+        assert ew_decoder("նաև").decode(ew_reading(E_N, E_A, E_E, E_W)) == "նաեւ"
+
+    def test_the_ligature_reading_of_a_word_listed_as_two_letters_is_kept(self) -> None:
+        assert ew_decoder("նաեւ").decode(ew_reading(E_N, E_A, E_LIG)) == "նաև"
 
 
 def test_use_lexicon_replaces_the_readers_beam_search_hook() -> None:
