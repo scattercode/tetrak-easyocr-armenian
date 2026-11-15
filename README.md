@@ -80,9 +80,24 @@ results = [
 ]
 ```
 
-It only touches a token that already contains an Armenian letter, so
-Latin or Cyrillic text sharing a page is left alone. See the function's
-docstring for the exact scope and what it deliberately does not fold.
+Inside an Armenian word it only folds towards Armenian. A token with no
+Armenian letter is written in the one script it belongs to: the model
+reads Cyrillic as well as Latin, and the glyphs the two share (`а`/`a`,
+`р`/`p`, `с`/`c`) can come out in either, so `роог` on an English line
+becomes `poor`. A token made only of shared glyphs follows the text
+around it; pass `context=` with the rest of the page when the string is a
+single region:
+
+```python
+page = "\n".join(text for _, text, _ in results)
+results = [
+    (bbox, tetrak_hy.fold_script(text, context=page), confidence)
+    for bbox, text, confidence in results
+]
+```
+
+See the function's docstring for the exact scope and what it
+deliberately does not fold.
 
 ## Correcting words with the word list
 
