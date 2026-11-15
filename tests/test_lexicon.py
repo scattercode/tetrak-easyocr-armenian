@@ -101,6 +101,75 @@ class TestWordList:
         assert lexicon.core("գրել՝") == "գրել"
 
 
+# A second alphabet for the orthography pair նոյն (classical) / նույն
+# (reformed): the reformed spelling has a ւ the classical one has not.
+ORTHO = ["[blank]", " ", "ն", "ո", "յ", "ւ"]
+O_BLANK, O_SPACE, N, VO, Y, W = range(len(ORTHO))
+
+
+def ortho_frame(winner: int, runner_up: int | None = None, runner_p: float = 0.0) -> list[float]:
+    row = [1e-6] * len(ORTHO)
+    row[winner] = 1.0 - runner_p
+    if runner_up is not None:
+        row[runner_up] = runner_p
+    total = sum(row)
+    return [p / total for p in row]
+
+
+def ortho_decoder(*lists: set[str]) -> lexicon.LexiconDecoder:
+    words = frozenset().union(*lists)
+    return lexicon.LexiconDecoder(ORTHO, [0], words)
+
+
+CLASSICAL_LIST = {"նոյն"}
+MODERN_LIST = {"նույն"}
+# Greedy նոյն; the blank between ո and յ nearly reads ւ, so նույն is the runner-up.
+READ_CLASSICAL = [
+    ortho_frame(N), ortho_frame(O_BLANK), ortho_frame(VO), ortho_frame(O_BLANK, W, 0.3),
+    ortho_frame(Y), ortho_frame(O_BLANK), ortho_frame(N), ortho_frame(O_BLANK),
+]  # fmt: skip
+# Greedy նույն; the ւ frame nearly reads blank, so նոյն is the runner-up.
+READ_REFORMED = [
+    ortho_frame(N), ortho_frame(O_BLANK), ortho_frame(VO), ortho_frame(O_BLANK),
+    ortho_frame(W, O_BLANK, 0.3), ortho_frame(O_BLANK), ortho_frame(Y), ortho_frame(O_BLANK),
+    ortho_frame(N), ortho_frame(O_BLANK),
+]  # fmt: skip
+
+
+class TestTwoOrthographies:
+    """Brief 014: a spelling in either list is accepted, never rewritten into the other's."""
+
+    def test_the_fixtures_read_as_meant(self) -> None:
+        assert ortho_decoder().decode(READ_CLASSICAL) == "նոյն"
+        assert ortho_decoder().decode(READ_REFORMED) == "նույն"
+
+    def test_a_single_list_rewrites_the_other_orthography(self) -> None:
+        """The over-correction the two lists exist to prevent."""
+        assert ortho_decoder(MODERN_LIST).decode(READ_CLASSICAL) == "նույն"
+        assert ortho_decoder(CLASSICAL_LIST).decode(READ_REFORMED) == "նոյն"
+
+    def test_a_classical_spelling_is_never_rewritten_to_its_reformed_form(self) -> None:
+        assert ortho_decoder(CLASSICAL_LIST, MODERN_LIST).decode(READ_CLASSICAL) == "նոյն"
+
+    def test_a_reformed_spelling_is_never_rewritten_to_its_classical_form(self) -> None:
+        assert ortho_decoder(CLASSICAL_LIST, MODERN_LIST).decode(READ_REFORMED) == "նույն"
+
+    def test_a_misread_is_still_corrected_to_whichever_list_holds_the_word(self) -> None:
+        # ննյն is in neither list; the runner-up with ո is the classical word.
+        misread = [
+            ortho_frame(N), ortho_frame(O_BLANK), ortho_frame(N, VO, 0.3), ortho_frame(O_BLANK),
+            ortho_frame(Y), ortho_frame(O_BLANK), ortho_frame(N), ortho_frame(O_BLANK),
+        ]  # fmt: skip
+        assert ortho_decoder().decode(misread) == "ննյն"
+        assert ortho_decoder(CLASSICAL_LIST, MODERN_LIST).decode(misread) == "նոյն"
+
+    def test_load_wordlists_is_the_union(self, tmp_path) -> None:
+        (tmp_path / "modern.tsv").write_text("նույն\t9\nա\t1\n", encoding="utf-8")
+        (tmp_path / "classical.tsv").write_text("նոյն\t3\n", encoding="utf-8")
+        words = lexicon.load_wordlists(tmp_path / "modern.tsv", tmp_path / "classical.tsv")
+        assert words == {"նույն", "նոյն"}
+
+
 def test_use_lexicon_replaces_the_readers_beam_search_hook() -> None:
     converter = types.SimpleNamespace(character=CHARACTER, ignore_idx=[0], decode_beamsearch=None)
     reader = types.SimpleNamespace(converter=converter)

@@ -16,10 +16,23 @@ on held-out training crops rather than those pages. What it breaks is what
 any lexicon breaks: proper nouns, classical spellings, an edition's own
 spellings -- a word the list does not know but the page really prints.
 
+**Two orthographies, one rule** (brief 014). Armenian is printed in two
+spellings: classical (pre-1922, and the diaspora since) and reformed (the
+Soviet reform, and Armenia since). A list built from reformed text alone
+would call every classical spelling on a page a misread -- *նոյն* is not
+in it, *նույն* is -- and "correct" the page into the other orthography,
+one word at a time. So the released lists are two, a modern one and a
+classical one, and the decoder works on their union: a word in either
+list is accepted as written, and a word in neither is corrected to the
+most probable listed reading, whichever list holds it. Nothing decides
+which orthography a page is in, and nothing needs to: a spelling the page
+really prints is in one of the lists, so it is never rewritten into the
+other's.
+
 Using it::
 
     reader = tetrak_hy.reader()
-    words = tetrak_hy.lexicon.load_wordlist("wordlist.tsv")
+    words = tetrak_hy.lexicon.load_wordlists("wordlist.tsv.gz", "wordlist-classical.tsv.gz")
     tetrak_hy.lexicon.use_lexicon(reader, words)
     reader.readtext("scan.png", decoder="beamsearch")
 
@@ -43,9 +56,12 @@ from pathlib import Path
 
 #: Default acceptance threshold, in natural-log probability: a word-list
 #: candidate replaces the greedy reading when it is at most this much less
-#: probable. Chosen on 5,530 crops held out from training (exact-match
+#: probable. Chosen on 5,530 crops held out from v5's training (exact-match
 #: 0.956 -> 0.964); 8 tied on accuracy and broke twice as many crops, and
-#: 12 broke almost as many as it fixed.
+#: 12 broke almost as many as it fixed. Re-checked on v7's 21,574 held-out
+#: crops with the two lists' union (brief 014): 5 is again the peak
+#: (0.900 -> 0.916, 393 fixed for 46 broken); 4 and 6 are within 0.001 of
+#: it, 8 breaks three times as many, and 12 breaks as many as it fixes.
 DEFAULT_TAU = 5.0
 
 #: Beam width per word. Words are short, so a narrow beam holds the n-best.
@@ -79,6 +95,19 @@ def load_wordlist(path: Path | str, min_count: int = 2) -> frozenset[str]:
             if word and (not count or int(count) >= min_count):
                 words.add(core(word))
     return frozenset(words)
+
+
+def load_wordlists(*paths: Path | str, min_count: int = 2) -> frozenset[str]:
+    """The union of several word lists, each read as :func:`load_wordlist` reads it.
+
+    This is how the modern and classical lists are combined: a word in any
+    of them is in the lexicon, so the decoder leaves it alone, and the
+    lists need agree on nothing.
+    """
+    words: frozenset[str] = frozenset()
+    for path in paths:
+        words |= load_wordlist(path, min_count=min_count)
+    return words
 
 
 class LexiconDecoder:

@@ -103,9 +103,9 @@ deliberately does not fold.
 
 The network reads one character at a time, so a word it misreads by one
 letter comes out as written, even when the right word was its own second
-choice. `reader(lexicon=True)` downloads the released word list (1.1
-million Armenian word forms, verified and cached like the weights) and
-corrects out-of-vocabulary words from the model's own alternatives:
+choice. `reader(lexicon=True)` downloads the released word lists (verified
+and cached like the weights) and corrects out-of-vocabulary words from the
+model's own alternatives:
 
 ```python
 reader = tetrak_hy.reader(lexicon=True)
@@ -120,8 +120,23 @@ correction; greedy calls are unchanged. A word is only replaced by a listed
 reading the model itself found nearly as probable, and keeps its
 punctuation. What it can break is what any word list breaks: proper nouns,
 and classical or edition spellings the list does not know. On held-out
-pages it fixed 465 words for every 13 it broke. To use your own list, pass
-it to `tetrak_hy.lexicon.use_lexicon(reader, tetrak_hy.lexicon.load_wordlist(path))`.
+pages it fixed 465 words for every 13 it broke. To use your own lists, pass
+them to `tetrak_hy.lexicon.use_lexicon(reader, tetrak_hy.lexicon.load_wordlists(*paths))`.
+
+**Two orthographies, one rule.** Armenian is printed in two spellings,
+classical (before 1922, and the diaspora since) and reformed (Armenia
+since). A list built from reformed text alone would call every classical
+spelling a misread — *նոյն* is not in it, *նույն* is — and correct a
+classical page into the other orthography one word at a time. So two lists
+are released, a modern one built from reformed-orthography harvests and a
+classical one built from classical harvests and the Nayiri Armenian
+Lexicon, and the decoder works on their union: a word in either list is
+accepted as written and never rewritten into the other's, and a word in
+neither is corrected to the most probable listed reading, whichever list
+holds it. Nothing decides which orthography a page is in, and nothing needs
+to. `tetrak_hy.wordlist()` returns the union; `wordlist_path()` and
+`classical_wordlist_path()` give the two files. Until a classical list is
+pinned (`CLASSICAL_WORDLIST_URL`), the modern list is used alone.
 
 ## What it is
 
