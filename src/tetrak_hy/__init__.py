@@ -113,6 +113,14 @@ WORDLIST_URL: str | None = (
 WORDLIST_SHA256: str | None = "6cc3cd02e14a9749c67188e7d061bcc064ed3bd56c5f7e7babf9c5abea089e9a"
 WORDLIST_NAME = "wordlist.tsv.gz"
 
+# Brief 014: a second list, in classical orthography, published beside the
+# modern one from v7 on and pinned the same way. wordlist() decodes with the
+# union of the two, so a spelling in either is accepted and never rewritten
+# into the other's; while this pair is None the modern list is used alone.
+CLASSICAL_WORDLIST_URL: str | None = None
+CLASSICAL_WORDLIST_SHA256: str | None = None
+CLASSICAL_WORDLIST_NAME = "wordlist-classical.tsv.gz"
+
 
 class WeightsNotAvailableError(RuntimeError):
     """Raised when no verified weights are released, supplied or cached."""
@@ -308,8 +316,24 @@ def _materialise_weights(directory: Path, weights_path: Path | str | None) -> Pa
     return destination
 
 
+def _verified_wordlist(
+    cache_dir: Path | str | None, url: str | None, expected: str | None, name: str, what: str
+) -> Path:
+    directory = _prepare_cache_dir(cache_dir)
+    destination = directory / name
+    if url is None or expected is None:
+        raise WeightsNotAvailableError(
+            f"No tetrak_hy {what} has been released yet, so there is no published "
+            f"checksum to verify {destination} against. Build one with the trainer's "
+            f"scripts/build_wordlist.py and pass it to lexicon.load_wordlist()."
+        )
+    if not (destination.exists() and _sha256(destination) == expected):
+        _download_verified(url, expected, destination, what)
+    return destination
+
+
 def wordlist_path(cache_dir: Path | str | None = None) -> Path:
-    """A verified copy of the released word list, downloaded on first use.
+    """A verified copy of the released modern word list, downloaded on first use.
 
     Cached as ``<cache>/wordlist.tsv.gz`` and hashed against
     :data:`WORDLIST_SHA256` on every call, exactly as the weights are.
@@ -318,24 +342,44 @@ def wordlist_path(cache_dir: Path | str | None = None) -> Path:
         WeightsNotAvailableError: No word list has been released, or none
             could be downloaded and verified.
     """
-    directory = _prepare_cache_dir(cache_dir)
-    destination = directory / WORDLIST_NAME
-    if WORDLIST_URL is None or WORDLIST_SHA256 is None:
-        raise WeightsNotAvailableError(
-            f"No tetrak_hy word list has been released yet, so there is no published "
-            f"checksum to verify {destination} against. Build one with the trainer's "
-            f"scripts/build_wordlist.py and pass it to lexicon.load_wordlist()."
-        )
-    if not (destination.exists() and _sha256(destination) == WORDLIST_SHA256):
-        _download_verified(WORDLIST_URL, WORDLIST_SHA256, destination, "word list")
-    return destination
+    return _verified_wordlist(cache_dir, WORDLIST_URL, WORDLIST_SHA256, WORDLIST_NAME, "word list")
+
+
+def classical_wordlist_path(cache_dir: Path | str | None = None) -> Path:
+    """A verified copy of the released classical-orthography word list.
+
+    Cached as ``<cache>/wordlist-classical.tsv.gz`` and hashed against
+    :data:`CLASSICAL_WORDLIST_SHA256` on every call.
+
+    Raises:
+        WeightsNotAvailableError: No classical list has been released
+            (:data:`CLASSICAL_WORDLIST_URL` is None), or none could be
+            downloaded and verified.
+    """
+    return _verified_wordlist(
+        cache_dir,
+        CLASSICAL_WORDLIST_URL,
+        CLASSICAL_WORDLIST_SHA256,
+        CLASSICAL_WORDLIST_NAME,
+        "classical word list",
+    )
 
 
 def wordlist(cache_dir: Path | str | None = None) -> frozenset[str]:
-    """The released word list, loaded for :mod:`tetrak_hy.lexicon`."""
-    from .lexicon import load_wordlist
+    """The released word lists, loaded for :mod:`tetrak_hy.lexicon`.
 
-    return load_wordlist(wordlist_path(cache_dir))
+    The union of the modern list and, once one is released, the classical
+    list: a word in either is accepted as written, so the decoder never
+    rewrites a classical spelling into its reformed form or the reverse
+    (see :mod:`tetrak_hy.lexicon`). Until a classical list is released the
+    modern list is used alone.
+    """
+    from .lexicon import load_wordlists
+
+    paths = [wordlist_path(cache_dir)]
+    if CLASSICAL_WORDLIST_URL is not None:
+        paths.append(classical_wordlist_path(cache_dir))
+    return load_wordlists(*paths)
 
 
 def reader(
