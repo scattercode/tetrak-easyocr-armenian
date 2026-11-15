@@ -1,7 +1,6 @@
 """Script-consistency fold for text this package's model has recognised.
 
-v1's per-word error analysis (tetrak's
-``product/research/armenian-v1-error-analysis.md``) found that roughly
+v1's per-word error analysis (design research 010) found that roughly
 half of v1's word-recall gap against ``tesseract -l hye`` is not a
 recognition failure. The CTC head has no language model, so inside an
 Armenian word it sometimes emits the visually identical Latin twin of an
@@ -39,6 +38,30 @@ here. That character is missing from v1's charset for a different reason
 (the training pipeline silently filtered every crop containing it, so the
 model can never emit it at all) and folding it here would rewrite genuine
 full stops. It is fixed by widening the charset, not by this fold.
+
+**Latin against Cyrillic** (brief 014). v7 is the first model trained to
+read Cyrillic, and the glyphs that Latin and Cyrillic share -- ``а`` and
+``a``, ``р`` and ``p``, ``с`` and ``c`` -- are one shape with two
+characters in its charset. Which one it emits is a coin toss the training
+mix loaded towards Cyrillic, so on the bilingual Armenian-English
+dictionary it printed ``роог`` for ``poor`` and ``еуe`` for ``eye`` on
+pages with no Cyrillic at all. A token with no Armenian letter is now
+read as one script: the letters only one script has (``w``, ``l``,
+``ж``, ``я``) decide it, and the shared glyphs are written in that
+script. A token made only of shared glyphs is decided by the text
+around it -- the whole string given to :func:`fold_script`, or
+``context`` when the caller has more of the page than the one token --
+and only when that text is overwhelmingly one script; a token that has
+unshared letters of both scripts is left alone, as is one with no
+context to decide it. ``г`` for ``r`` is included on the Cyrillic side
+because the model confuses them that way round, though they are not the
+same glyph. Re-scoring v7's and v6's saved readings of all eighteen
+evaluation registers with this rule moved four of v7's up and none of
+either model's down: the dictionary's English words 711 -> 718 of 982
+with the stray Cyrillic tokens halved, the Soviet encyclopedia's Latin
+113 -> 122 of 179, and a word each on the medical encyclopedia and the
+Tumanyan notes. The rest of the dictionary's regression was plain Latin
+misreads, fixed in training rather than here.
 """
 
 from __future__ import annotations
@@ -78,6 +101,73 @@ _TOKEN = re.compile(r"\S+")
 _DIGIT_TWO_LOOKALIKES = str.maketrans({"Չ": "2", "շ": "2"})
 
 
+# Shared glyphs, keyed by the character the model emitted. The Cyrillic
+# side also carries г -> r, a confusion the model makes in that direction
+# only. A letter in neither table belongs to one script alone and is what
+# decides a token's script; a token with such letters from both scripts
+# is genuinely mixed and is left as read.
+_CYRILLIC_TO_LATIN = {
+    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x", "г": "r",
+    "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M", "Н": "H", "О": "O", "Р": "P",
+    "С": "C", "Т": "T", "Х": "X",
+}  # fmt: skip
+_LATIN_TO_CYRILLIC = {
+    "a": "а", "e": "е", "o": "о", "p": "р", "c": "с", "y": "у", "x": "х",
+    "A": "А", "B": "В", "E": "Е", "K": "К", "M": "М", "H": "Н", "O": "О", "P": "Р",
+    "C": "С", "T": "Т", "X": "Х",
+}  # fmt: skip
+_TO_LATIN = str.maketrans(_CYRILLIC_TO_LATIN)
+_TO_CYRILLIC = str.maketrans(_LATIN_TO_CYRILLIC)
+_LATIN_LETTER = re.compile(r"[A-Za-z]")
+_CYRILLIC_LETTER = re.compile(r"[\u0400-\u04ff]")
+
+# How many unshared letters of one script a text needs for each of the
+# other before a token of shared glyphs alone is read as that script.
+# v7's reading of a dictionary page has hundreds of unshared Latin
+# letters against a handful of stray Cyrillic ones; a page of Russian
+# notes the reverse. Anything closer is left undecided.
+_DOMINANCE = 4
+
+
+def _unshared_counts(text: str) -> tuple[int, int]:
+    """How many letters of *text* belong to Latin alone, and to Cyrillic alone."""
+    latin = sum(1 for letter in _LATIN_LETTER.findall(text) if letter not in _LATIN_TO_CYRILLIC)
+    cyrillic = sum(
+        1 for letter in _CYRILLIC_LETTER.findall(text) if letter not in _CYRILLIC_TO_LATIN
+    )
+    return latin, cyrillic
+
+
+def _dominant_script(context: str) -> str | None:
+    """``"latin"``, ``"cyrillic"`` or ``None`` for *context*'s non-Armenian tokens."""
+    others = [
+        token
+        for token in context.split()
+        if not any(character in _ARMENIAN_LETTERS for character in token)
+    ]
+    latin, cyrillic = _unshared_counts(" ".join(others))
+    if latin and latin >= _DOMINANCE * cyrillic:
+        return "latin"
+    if cyrillic and cyrillic >= _DOMINANCE * latin:
+        return "cyrillic"
+    return None
+
+
+def _fold_latin_cyrillic(token: str, context_script: str | None) -> str:
+    """*token* (no Armenian letter) written in the one script it belongs to."""
+    if not (_LATIN_LETTER.search(token) or _CYRILLIC_LETTER.search(token)):
+        return token
+    latin, cyrillic = _unshared_counts(token)
+    if latin and cyrillic:
+        return token
+    script = "latin" if latin else "cyrillic" if cyrillic else context_script
+    if script == "latin":
+        return token.translate(_TO_LATIN)
+    if script == "cyrillic":
+        return token.translate(_TO_CYRILLIC)
+    return token
+
+
 def _is_numeric_token(token: str) -> bool:
     """A number with its punctuation, allowing for ``Չ``/``շ`` misread for 2."""
     return any(character.isdigit() for character in token) and all(
@@ -86,26 +176,33 @@ def _is_numeric_token(token: str) -> bool:
     )
 
 
-def _fold_token(token: str) -> str:
+def _fold_token(token: str, context_script: str | None = None) -> str:
     if _is_numeric_token(token):
         return token.translate(_DIGIT_TWO_LOOKALIKES)
     if not any(character in _ARMENIAN_LETTERS for character in token):
-        return token
+        return _fold_latin_cyrillic(token, context_script)
     return "".join(_HOMOGLYPHS.get(character, character) for character in token)
 
 
-def fold_script(text: str) -> str:
-    """Fold cross-script homoglyphs in *text* onto their Armenian form.
+def fold_script(text: str, *, context: str | None = None) -> str:
+    """Fold cross-script homoglyphs in *text* onto the script each token is in.
 
     Args:
         text: Recognised text -- typically one string from
             ``easyocr.Reader.readtext``. Whitespace between tokens is
             preserved exactly; only the tokens themselves change.
+        context: More of the same page, when the caller has it: the text
+            of every region, say, while *text* is one region's. It decides
+            whether a Latin-or-Cyrillic token made only of shared glyphs
+            is read as Latin or as Cyrillic. When omitted, *text* itself is
+            the context.
 
     Returns:
         *text* with every homoglyph in each Armenian-containing token
-        folded to its Armenian or canonical form. A token with no
-        Armenian letter of its own is returned unchanged, as is *text* as
-        a whole when it contains no Armenian letters at all.
+        folded to its Armenian or canonical form, and every other token
+        that mixes Latin and Cyrillic, or could be either, written in the
+        one script it belongs to. Digits, punctuation and tokens that are
+        genuinely of two scripts are returned unchanged.
     """
-    return _TOKEN.sub(lambda match: _fold_token(match.group()), text)
+    script = _dominant_script(text if context is None else context)
+    return _TOKEN.sub(lambda match: _fold_token(match.group(), script), text)

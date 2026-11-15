@@ -94,3 +94,58 @@ class TestDigitTwo:
 
     def test_the_letter_alone_is_not_a_number(self) -> None:
         assert fold_script("Չ, շ") == "Չ, շ"
+
+
+class TestLatinAgainstCyrillic:
+    """A token with no Armenian letter is written in one script (brief 014).
+
+    v7 reads Cyrillic, so the glyphs Latin and Cyrillic share come out in
+    either script; on the Armenian-English dictionary it printed ``роог``
+    for ``poor`` on pages with no Cyrillic at all."""
+
+    def test_a_shared_glyph_token_follows_the_latin_text_around_it(self) -> None:
+        text = "poverty, n. աղքատութիւն. роог, a. աղքատ. еуe, n. աչք"
+        assert fold_script(text) == "poverty, n. աղքատութիւն. poor, a. աղքատ. eye, n. աչք"
+
+    def test_an_unshared_latin_letter_decides_the_token_by_itself(self) -> None:
+        # ``l`` is Latin alone, so the token is Latin whatever surrounds it.
+        assert fold_script("cоal") == "coal"
+        assert fold_script("Ярмарка cоal") == "Ярмарка coal"
+
+    def test_an_unshared_cyrillic_letter_decides_the_token_by_itself(self) -> None:
+        # ``ж`` is Cyrillic alone: the Latin ``a`` the model emitted inside it folds.
+        assert fold_script("жaра") == "жара"
+
+    def test_ge_is_read_as_r_in_a_latin_token(self) -> None:
+        assert fold_script("the еаг and the роог") == "the ear and the poor"
+
+    def test_a_token_of_shared_glyphs_follows_cyrillic_text(self) -> None:
+        text = "Пушкин писал о сосо"
+        assert fold_script("Пушкин писал o coco", context=text) == "Пушкин писал о сосо"
+
+    def test_a_token_with_unshared_letters_of_both_scripts_is_left_alone(self) -> None:
+        assert fold_script("wыil ingenious") == "wыil ingenious"
+
+    def test_no_context_means_no_decision(self) -> None:
+        # ``coco`` is all shared glyphs and nothing around it says which script.
+        assert fold_script("coco") == "coco"
+        assert fold_script("сосо") == "сосо"
+
+    def test_balanced_text_decides_nothing(self) -> None:
+        assert fold_script("жил was сосо") == "жил was сосо"
+
+    def test_context_overrides_the_text_itself(self) -> None:
+        page = "\n".join(["Pride and Prejudice"] * 3)
+        assert fold_script("роог", context=page) == "poor"
+
+    def test_an_armenian_token_is_still_folded_the_old_way(self) -> None:
+        assert fold_script("hայ and еаг") == "հայ and ear"
+
+    def test_genuine_russian_text_is_untouched(self) -> None:
+        text = "Собрание сочинений в десяти томах. Том 5. Москва, 1960"
+        assert fold_script(text) == text
+
+    def test_folding_twice_matches_folding_once(self) -> None:
+        text = "poverty, n. аղքատ. роог, a. аղքատ. еуe, n. աչք wыil"
+        once = fold_script(text)
+        assert fold_script(once) == once
