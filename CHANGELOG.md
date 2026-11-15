@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-11-15
+
+### Changed
+
+- Bump ruff from 0.16.5 to 0.16.8 (#11)
+- Bump actions/download-artifact from 7 to 8 (#9)
+- Cover the word list and the public Hub in CLAUDE.md and the release skill (#13)
+- Bump ruff from 0.16.8 to 0.16.9 (#14)
+- Move the house rules to AGENTS.md for any coding agent (#15)
+- Bump ruff from 0.16.9 to 0.16.10 (#16)
+- Move the lock past the pillow, filelock and certifi advisories (#23)
+- Bump setuptools from 84.0.0 to 84.1.0 (#21)
+- Bump ruff from 0.16.10 to 0.17.2 (#22)
+- Bump pytest from 9.1.1 to 9.2.0 (#25)
+- Bump ruff from 0.17.2 to 0.17.3 (#24)
+- Grant permissions per job and pass the branch through env (#26)
+- Read a Latin-or-Cyrillic token in the one script it belongs to (#27)
+
 ## [0.8.0] - 2026-10-03
 
 ### Changed
