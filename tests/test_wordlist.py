@@ -9,7 +9,7 @@ import pytest
 
 LIST = gzip.compress("աբ\t5\nգդ\t1\n".encode())
 LIST_SHA256 = hashlib.sha256(LIST).hexdigest()
-CLASSICAL = gzip.compress("եւ\t9\nգդ\t1\n".encode())
+CLASSICAL = gzip.compress("նաւ\t9\nգդ\t1\n".encode())
 CLASSICAL_SHA256 = hashlib.sha256(CLASSICAL).hexdigest()
 
 
@@ -83,11 +83,11 @@ def test_with_both_released_the_lexicon_is_their_union(
     classical_released, fake_requests, tmp_path
 ) -> None:
     fake_requests.get = serve
-    assert classical_released.wordlist(tmp_path) == {"աբ", "եւ"}
+    assert classical_released.wordlist(tmp_path) == {"աբ", "նաւ"}
     assert (tmp_path / classical_released.CLASSICAL_WORDLIST_NAME).read_bytes() == CLASSICAL
     # Both cached: a second call must not reach the network.
     fake_requests.get = None
-    assert classical_released.wordlist(tmp_path) == {"աբ", "եւ"}
+    assert classical_released.wordlist(tmp_path) == {"աբ", "նաւ"}
 
 
 def test_a_tampered_classical_download_is_refused(

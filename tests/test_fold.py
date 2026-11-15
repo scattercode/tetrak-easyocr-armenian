@@ -73,9 +73,50 @@ class TestNoArmenianLetters:
         assert fold_script("1907") == "1907"
 
 
+class TestThreeWayScript:
+    """Each token is Armenian, Latin or Cyrillic before a glyph is written (brief 014, issue #17)."""
+
+    def test_cyrillic_o_inside_an_armenian_word_is_folded_like_latin_o(self) -> None:
+        assert fold_script("оրեր Оրեր") == "օրեր Օրեր"
+
+    def test_cyrillic_en_inside_an_armenian_word_is_folded_like_latin_h(self) -> None:
+        assert fold_script("Нայաստան") == "Հայաստան"
+
+    def test_a_cyrillic_word_keeps_its_o(self) -> None:
+        assert fold_script("Москва") == "Москва"
+
+    def test_a_latin_o_in_a_cyrillic_word_is_written_cyrillic_not_armenian(self) -> None:
+        assert fold_script("Мoсква") == "Москва"
+
+    def test_a_colon_after_a_cyrillic_word_stays_a_colon(self) -> None:
+        assert fold_script("Примечания:") == "Примечания:"
+
+    def test_a_latin_h_beside_unshared_cyrillic_letters_makes_a_token_of_two_scripts(self) -> None:
+        """Left as read: neither script can claim it, and the Armenian fold has no say."""
+        assert fold_script("Армян0hой") == "Армян0hой"
+
+    def test_an_armenian_letter_decides_a_token_whatever_else_it_holds(self) -> None:
+        # Unshared Cyrillic letters beside an Armenian one do not make the
+        # token Cyrillic: a mixed token is never meant, so Armenian wins.
+        assert fold_script("вoրեր") == "вօրեր"
+
+
+class TestEwLigature:
+    """Brief 014: եւ and և are one word printed two ways; the fold never chooses between them."""
+
+    def test_the_two_letter_form_is_left_as_read(self) -> None:
+        assert fold_script("նաեւ") == "նաեւ"
+
+    def test_the_ligature_is_left_as_read(self) -> None:
+        assert fold_script("նաև") == "նաև"
+
+    def test_either_form_makes_its_token_armenian(self) -> None:
+        assert fold_script("եւ: և:") == "եւ։ և։"
+
+
 class TestIdempotence:
     def test_folding_twice_matches_folding_once(self) -> None:
-        text = "hայ oրեր Երևան: 1886–ին"
+        text = "hայ oրեր оրեր Երևան: 1886–ին Мoсква poor"
         once = fold_script(text)
         assert fold_script(once) == once
 
