@@ -84,7 +84,7 @@ MODEL_REPO_URL = "https://huggingface.co/tetrak/easyocr-armenian"
 # The model version these weights are, as tagged on the Hub. The URL below
 # resolves the tag's commit rather than the tag itself: a tag can be moved,
 # a commit cannot, so what ships here is exactly what was reviewed.
-WEIGHTS_VERSION = "v6"
+WEIGHTS_VERSION = "v7"
 
 # Filled in by the first weights release; None means "not yet released".
 # Each release updates both together — a URL without its checksum must
@@ -93,13 +93,15 @@ WEIGHTS_VERSION = "v6"
 # version by construction, since CTC class indices are positional. v5
 # widened the charset again (170 → 175 classes: ellipsis, square
 # brackets, numero sign, superscript two), so its head cannot be read
-# under v3's yaml or the reverse. v6 is a fine-tune of v5 on the same
-# 175 classes, so the yaml is unchanged.
+# under v3's yaml or the reverse. v6 was a fine-tune of v5 on the same
+# 175 classes. v7 (brief 014) widens it to 246: < > ³ ±, the Armenian
+# apostrophe of elision ՚ and the Russian alphabet in both cases, so its
+# yaml moves with it and v6's cannot read its head.
 WEIGHTS_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "9edcb94edbe9edac8e0dd16e376c2650613667f8/tetrak_hy.pth"
+    "1d7b076caf2555d3dd7ae56997877fc3b27d166b/tetrak_hy.pth"
 )
-WEIGHTS_SHA256: str | None = "19934f01854b1d371ea2aabb0aac166e3fa88b404a83f31185f180b31da8701b"
+WEIGHTS_SHA256: str | None = "7b44dc0b81b11ca382a2faa4e4c27d2141da843a5653117a49506eaf5ca9d8fa"
 
 
 # The word list tetrak_hy.lexicon decodes with, published from v6 on beside
@@ -108,17 +110,22 @@ WEIGHTS_SHA256: str | None = "19934f01854b1d371ea2aabb0aac166e3fa88b404a83f31185
 # wordlist() refuses rather than loading something it cannot verify.
 WORDLIST_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "9edcb94edbe9edac8e0dd16e376c2650613667f8/wordlist.tsv.gz"
+    "1d7b076caf2555d3dd7ae56997877fc3b27d166b/wordlist.tsv.gz"
 )
-WORDLIST_SHA256: str | None = "6cc3cd02e14a9749c67188e7d061bcc064ed3bd56c5f7e7babf9c5abea089e9a"
+WORDLIST_SHA256: str | None = "f53f0745bc3a792f7a3aa9cb4244c3c3f9d42834a359a5e7500d8dc7500e0f68"
 WORDLIST_NAME = "wordlist.tsv.gz"
 
 # Brief 014: a second list, in classical orthography, published beside the
 # modern one from v7 on and pinned the same way. wordlist() decodes with the
 # union of the two, so a spelling in either is accepted and never rewritten
 # into the other's; while this pair is None the modern list is used alone.
-CLASSICAL_WORDLIST_URL: str | None = None
-CLASSICAL_WORDLIST_SHA256: str | None = None
+CLASSICAL_WORDLIST_URL: str | None = (
+    "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
+    "1d7b076caf2555d3dd7ae56997877fc3b27d166b/wordlist-classical.tsv.gz"
+)
+CLASSICAL_WORDLIST_SHA256: str | None = (
+    "d71d57dd0a9667711a5602464ed47dd1e46ca5b0b088cb0f1cb4cb8bdd48e689"
+)
 CLASSICAL_WORDLIST_NAME = "wordlist-classical.tsv.gz"
 
 

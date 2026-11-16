@@ -10,12 +10,17 @@ are trained in part on text from Armenian Wikisource's edition of the
 Armenian Soviet Encyclopedia (https://hy.wikisource.org/, CC BY-SA 3.0);
 per-release attribution and provenance accompany each release.
 
-The word list published beside the weights from v6 on (wordlist.tsv.gz) is
-derived from proofread Armenian Wikisource transcripts (CC BY-SA 3.0) and
-includes the Nayiri Armenian Lexicon, (c) Serouj Ourishian, licensed under
-CC BY 4.0 (http://www.nayiri.com/nayiri-armenian-lexicon), with its word
-forms added at the list's minimum count. Because it is derived from those
-sources, the word list is licensed under CC BY-SA 4.0
+The word lists published beside the weights (wordlist.tsv.gz from v6 on,
+and wordlist-classical.tsv.gz from v7 on) are derived from proofread
+Armenian Wikisource transcripts (CC BY-SA 3.0); the classical list includes
+the Nayiri Armenian Lexicon, (c) Serouj Ourishian, licensed under CC BY 4.0
+(http://www.nayiri.com/nayiri-armenian-lexicon), with its word forms added
+at the list's minimum count. Because they are derived from those sources,
+the word lists are licensed under CC BY-SA 4.0
 (https://creativecommons.org/licenses/by-sa/4.0/), not under this package's
-Apache License 2.0. It is downloaded on request, not distributed in the
+Apache License 2.0. They are downloaded on request, not distributed in the
 package.
+
+The two crops under tests/fixtures/ are cut from scans on Armenian
+Wikisource: a word of Khrimian Hayrik's Works and a Russian word from the
+apparatus of Tumanyan's academic edition, vol. 5. They are test data only.
