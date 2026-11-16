@@ -3,19 +3,23 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: alpha, shipping v6 weights and a word list.** `reader()`
-> downloads a trained model and works out of the box. v6 is v5 fine-tuned
-> on 99,521 real crops cut from the scans of sixteen works: an encyclopedia,
-> a medical encyclopedia, a bilingual dictionary, a scholarly history and
-> literary editions in both dialects. With `fold_script()` and the word
-> list, it leads every Armenian engine we have measured on word recall on
-> three of eight held-out registers, and is within a thousandth on a
-> fourth. The numbers, and the registers it still trails on, are on the
-> [model card](https://huggingface.co/tetrak/easyocr-armenian).
+> **Status: alpha, shipping v7 weights and two word lists.** `reader()`
+> downloads a trained model and works out of the box. v7 reads both
+> Armenian orthographies and the Russian that Soviet editions quote: a
+> pre-train from scratch on 58 proofread works, a third of them in the
+> classical spelling, fine-tuned on 217,362 real crops from the scans of
+> 42 works. With `fold_script()` and the two word lists it leads every
+> Armenian engine we have measured on word recall on fifteen of seventeen
+> held-out registers. Its known limits: it is a little behind v6 on five
+> of the eight registers v6 was measured on (by 0.003 to 0.018 word
+> recall), behind Calfa on Abovyan's collected works, and it still
+> confuses the digits of a bold italic. The numbers are on the
+> [model card](https://huggingface.co/tetrak/easyocr-armenian); `v6`
+> stays tagged on the Hub for a caller who reads reformed print only.
 >
 > Figures published for v5 and earlier used a character-similarity metric
 > later found to be wrong (difflib's `autojunk`) and are not comparable
-> with v6's.
+> with v6's or v7's.
 >
 > **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
 > labels carrying quotation marks the images do not show, and with no
@@ -141,8 +145,9 @@ holds it. Nothing decides which orthography a page is in, and nothing needs
 to. The same holds for `եւ` against `և`: the look-up key reads the two as
 one, so a word listed in either form is accepted in both and never
 corrected from the page's form to the other's. `tetrak_hy.wordlist()` returns the union; `wordlist_path()` and
-`classical_wordlist_path()` give the two files. Until a classical list is
-pinned (`CLASSICAL_WORDLIST_URL`), the modern list is used alone.
+`classical_wordlist_path()` give the two files. Both are pinned from v7 on;
+a build of this package without a classical pin (`CLASSICAL_WORDLIST_URL`)
+uses the modern list alone.
 
 ## What it is
 
@@ -187,20 +192,27 @@ rendered in fifteen Armenian faces at real scan sizes and degraded to
 look scanned. v5 added a fine-tune on real crops cut from human-proofread
 scans and labelled from their transcripts, mixed with the synthetic set
 so the model adapts to real print without forgetting the breadth it
-started with. **v6 continues that fine-tune on 99,521 real crops from
-862 scans of sixteen sources**, including more volumes of the editions
-v5 read least well. The widened
-corpus is what taught it both dialects and several registers rather
+started with. v6 continued that fine-tune on 99,521 real crops from
+862 scans of sixteen sources. **v7 starts again**: a pre-train from
+scratch on every proofread page of 58 works, 33 of them in classical
+orthography (a quarter of the sampled lines, and one line in twenty
+mixing Armenian with Russian), then a fine-tune on 217,362 real crops
+cut from 2,136 scans of 42 works, with all-caps lines and English lines
+from six public-domain novels in every batch. Its charset adds the
+Armenian apostrophe of elision and the Russian alphabet. The widened
+corpus is what taught it both orthographies and several registers rather
 than one encyclopedia's typography; the real-crop fine-tune is what
 closed the gap on degraded letterpress that a cleanly rendered font
 cannot teach.
 
-The word list counts words in the same proofread transcripts, with the
-evaluation pages excluded, and adds every word form of the
+The two word lists count words in the same proofread transcripts, with
+the evaluation pages excluded: `wordlist.tsv.gz` from the
+reformed-orthography works, and `wordlist-classical.tsv.gz` from the
+classical ones with every word form of the
 [Nayiri Armenian Lexicon](http://www.nayiri.com/nayiri-armenian-lexicon)
-(© Serouj Ourishian, CC BY 4.0). It is published beside the weights as
-`wordlist.tsv.gz`, under CC BY-SA 4.0 because of those sources, and is
-downloaded only when `reader(lexicon=True)` or `wordlist()` asks for it.
+(© Serouj Ourishian, CC BY 4.0) added. Both are published beside the
+weights under CC BY-SA 4.0 because of those sources, and are downloaded
+only when `reader(lexicon=True)` or `wordlist()` asks for them.
 
 Every weights release carries a provenance record — data recipe, fonts,
 dataset revision, training config and checksums — published as

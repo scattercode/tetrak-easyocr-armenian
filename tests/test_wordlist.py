@@ -23,8 +23,15 @@ class Response:
 
 @pytest.fixture
 def released(tetrak, monkeypatch):
+    """The modern list released and the classical one not: the v6 state.
+
+    The package has pinned both since v7, so the classical pair is cleared
+    here rather than assumed absent; ``classical_released`` sets it back.
+    """
     monkeypatch.setattr(tetrak, "WORDLIST_URL", "https://example.invalid/wordlist.tsv.gz")
     monkeypatch.setattr(tetrak, "WORDLIST_SHA256", LIST_SHA256)
+    monkeypatch.setattr(tetrak, "CLASSICAL_WORDLIST_URL", None)
+    monkeypatch.setattr(tetrak, "CLASSICAL_WORDLIST_SHA256", None)
     return tetrak
 
 
