@@ -20,7 +20,11 @@ V7_COMMIT = "1d7b076caf2555d3dd7ae56997877fc3b27d166b"
 
 @pytest.fixture(scope="module")
 def released_reader():
-    pytest.importorskip("easyocr")
+    # conftest registers a stand-in ``easyocr`` module when the real one is
+    # absent, so importorskip alone is not enough: the stand-in has no Reader.
+    easyocr = pytest.importorskip("easyocr")
+    if not hasattr(easyocr, "Reader"):
+        pytest.skip("the real easyocr is not installed")
     import tetrak_hy
 
     return tetrak_hy.reader(verbose=False, lexicon=True)
