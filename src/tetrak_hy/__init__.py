@@ -84,7 +84,7 @@ MODEL_REPO_URL = "https://huggingface.co/tetrak/easyocr-armenian"
 # The model version these weights are, as tagged on the Hub. The URL below
 # resolves the tag's commit rather than the tag itself: a tag can be moved,
 # a commit cannot, so what ships here is exactly what was reviewed.
-WEIGHTS_VERSION = "v7"
+WEIGHTS_VERSION = "v8"
 
 # Filled in by the first weights release; None means "not yet released".
 # Each release updates both together — a URL without its checksum must
@@ -96,12 +96,13 @@ WEIGHTS_VERSION = "v7"
 # under v3's yaml or the reverse. v6 was a fine-tune of v5 on the same
 # 175 classes. v7 (brief 014) widens it to 246: < > ³ ±, the Armenian
 # apostrophe of elision ՚ and the Russian alphabet in both cases, so its
-# yaml moves with it and v6's cannot read its head.
+# yaml moves with it and v6's cannot read its head. v8 (brief 023) is a
+# fine-tune of v7 on the same 246 classes, so the yaml did not change.
 WEIGHTS_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "1d7b076caf2555d3dd7ae56997877fc3b27d166b/tetrak_hy.pth"
+    "03f3f1d30b14b80bf3a04a72699be056b0113fd3/tetrak_hy.pth"
 )
-WEIGHTS_SHA256: str | None = "7b44dc0b81b11ca382a2faa4e4c27d2141da843a5653117a49506eaf5ca9d8fa"
+WEIGHTS_SHA256: str | None = "1aa8447dd53b6429ed1d7b807ad0688b3154f5d750d23513604408ef8ed443b0"
 
 
 # The word list tetrak_hy.lexicon decodes with, published from v6 on beside
@@ -110,7 +111,7 @@ WEIGHTS_SHA256: str | None = "7b44dc0b81b11ca382a2faa4e4c27d2141da843a5653117a49
 # wordlist() refuses rather than loading something it cannot verify.
 WORDLIST_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "1d7b076caf2555d3dd7ae56997877fc3b27d166b/wordlist.tsv.gz"
+    "03f3f1d30b14b80bf3a04a72699be056b0113fd3/wordlist.tsv.gz"
 )
 WORDLIST_SHA256: str | None = "f53f0745bc3a792f7a3aa9cb4244c3c3f9d42834a359a5e7500d8dc7500e0f68"
 WORDLIST_NAME = "wordlist.tsv.gz"
@@ -121,7 +122,7 @@ WORDLIST_NAME = "wordlist.tsv.gz"
 # into the other's; while this pair is None the modern list is used alone.
 CLASSICAL_WORDLIST_URL: str | None = (
     "https://huggingface.co/tetrak/easyocr-armenian/resolve/"
-    "1d7b076caf2555d3dd7ae56997877fc3b27d166b/wordlist-classical.tsv.gz"
+    "03f3f1d30b14b80bf3a04a72699be056b0113fd3/wordlist-classical.tsv.gz"
 )
 CLASSICAL_WORDLIST_SHA256: str | None = (
     "d71d57dd0a9667711a5602464ed47dd1e46ca5b0b088cb0f1cb4cb8bdd48e689"

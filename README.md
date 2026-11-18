@@ -3,23 +3,25 @@
 Armenian language support for [EasyOCR](https://github.com/JaidedAI/EasyOCR)
 — a trained recognition model, installable as a custom network.
 
-> **Status: alpha, shipping v7 weights and two word lists.** `reader()`
-> downloads a trained model and works out of the box. v7 reads both
-> Armenian orthographies and the Russian that Soviet editions quote: a
-> pre-train from scratch on 58 proofread works, a third of them in the
-> classical spelling, fine-tuned on 217,362 real crops from the scans of
-> 42 works. With `fold_script()` and the two word lists it leads every
-> Armenian engine we have measured on word recall on fifteen of seventeen
-> held-out registers. Its known limits: it is a little behind v6 on five
-> of the eight registers v6 was measured on (by 0.003 to 0.018 word
-> recall), behind Calfa on Abovyan's collected works, and it still
-> confuses the digits of a bold italic. The numbers are on the
-> [model card](https://huggingface.co/tetrak/easyocr-armenian); `v6`
-> stays tagged on the Hub for a caller who reads reformed print only.
+> **Status: alpha, shipping v8 weights and two word lists.** `reader()`
+> downloads a trained model and works out of the box. v8 reads both
+> Armenian orthographies and the Russian that Soviet editions quote. It
+> is v7 (a pre-train from scratch on 58 proofread works, a third of them
+> in the classical spelling, fine-tuned on 217,362 real crops) taught the
+> print v7 read worst: 28,331 more crops from three books set in italics.
+> With `fold_script()` and the two word lists it leads every Armenian
+> engine we have measured on mean word recall, and on twelve of seventeen
+> held-out registers, level on one more. Its known limits: it is behind
+> Calfa's `hye-paddle` on Abovyan's collected works and narrowly on three
+> other registers, it reads fewer of the Russian words in Tumanyan's
+> apparatus than v7 did (53 of 81 against 61), and it still confuses the
+> digits of a bold italic. The numbers are on the
+> [model card](https://huggingface.co/tetrak/easyocr-armenian); `v7` and
+> `v6` stay tagged on the Hub.
 >
 > Figures published for v5 and earlier used a character-similarity metric
 > later found to be wrong (difflib's `autojunk`) and are not comparable
-> with v6's or v7's.
+> with later ones.
 >
 > **Upgrading from v0 or v1?** Do. Both were trained with 21% of their
 > labels carrying quotation marks the images do not show, and with no
@@ -199,7 +201,11 @@ orthography (a quarter of the sampled lines, and one line in twenty
 mixing Armenian with Russian), then a fine-tune on 217,362 real crops
 cut from 2,136 scans of 42 works, with all-caps lines and English lines
 from six public-domain novels in every batch. Its charset adds the
-Armenian apostrophe of elision and the Russian alphabet. The widened
+Armenian apostrophe of elision and the Russian alphabet. **v8 is v7
+fine-tuned** for 3,000 more iterations, with a fifth of the real crops in
+each batch drawn from 28,331 new ones: 616 scans of three books set in
+italics, Khatisian's memoirs above all, which v7 itself could align to
+their transcripts where v6 could not. The widened
 corpus is what taught it both orthographies and several registers rather
 than one encyclopedia's typography; the real-crop fine-tune is what
 closed the gap on degraded letterpress that a cleanly rendered font
